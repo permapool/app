@@ -9,7 +9,6 @@ import {
 import { base } from "wagmi/chains";
 import { rebaseAbi, rebaseAddress } from "~/constants/abi-rebase";
 import { permapoolAbi, permapoolAddress } from "~/constants/abi-permapool";
-import { governanceAbi, governanceAddress } from "~/constants/abi-governance";
 import { switchChain } from '@wagmi/core'
 
 import { config } from '~/components/providers/WagmiProvider';
@@ -78,8 +77,8 @@ export default function Permapool() {
       await switchChain(config, { chainId: base.id });
     }
     writeContract({
-      abi: governanceAbi,
-      address: governanceAddress as Address,
+      abi: permapoolAbi,
+      address: permapoolAddress as Address,
       functionName: "donate",
       args: [],
       chainId: base.id,
