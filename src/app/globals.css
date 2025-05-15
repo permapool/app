@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #222222;
+  --foreground: #F5F5F5;
+  --border: #777;
+}
+
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+  font-size: 1.5em;
+}
+
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
+.flex-grow {
+  -webkit-flex: 1 0 0;
+  flex: 1 0 0;
+}
+
+.flex-shrink {
+  -webkit-flex: 0 1 auto;
+  flex: 0 1 auto;
+}
+.flex {
+  display: -webkit-flex !important;
+  display: flex !important;
+}
+
+button {
+  font-family: "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+}
+
+.small-font {
+  font-size: .75em;
+}
+
+h1, h2, h3 {
+  font-weight: bold;
+}
+
+button {
+  border: 1px solid var(--border);
+  padding: 0 .25em;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+
+
+input[type="text"] {
+  border: 1px solid var(--border);
+  outline: none;
+  background-color: var(--background);
+}
