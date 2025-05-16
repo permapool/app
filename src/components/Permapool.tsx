@@ -48,8 +48,7 @@ export default function Permapool() {
     args: [tokenId],
     scopeKey: `permapool-${cacheBust}`,
   });
-  const [unclaimedTokenFees, unclaimedEthFees] = (unclaimedFeesRes || [0n, 0n]) as [bigint, bigint];
-  // END NOTE
+  const [unclaimedEthFees, unclaimedTokenFees] = (unclaimedFeesRes || [0n, 0n]) as [bigint, bigint];
 
   const { data: claimedFeesRes } = useReadContract({
     abi: permapoolAbi,
