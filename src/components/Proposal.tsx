@@ -67,16 +67,16 @@ export default function ProposalList({ proposal, isMember }: { proposal: Proposa
         Set {shortAddress(proposal.target)} weight to {proposal.weight}
       </div>
       <div className="small-font">
-      {
-        proposal.passed ? 'Passed ✅' : (
-          <span>{expired ? 'Expired' : `Expires in ${getDuration(Number(proposal.expiration - now))}`}</span>
-        )
-      }
+        {
+          proposal.passed ? 'Passed ✅' : (
+            <span>{expired ? 'Expired' : `Expires in ${getDuration(Number(proposal.expiration - now))}`}</span>
+          )
+        }
         {
           isMember ? (
             <div>
               {
-                hasVoted ? 'Voted ✅' : (
+                hasVoted ? 'You Voted ✅' : (
                   <span>
                     {
                       !expired ? (

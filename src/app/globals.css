@@ -50,6 +50,26 @@ button {
 h1, h2, h3 {
   font-weight: bold;
 }
+h1 {
+  font-size: 1.75em;
+}
+h2 {
+  font-size: 1.5em;
+}
+h3 {
+  font-size: 1.25em;
+}
+@media(max-width: 600px) {
+  h1 {
+    font-size: 1.5em;
+  }
+  h2 {
+    font-size: 1.25em;
+  }
+  h3 {
+    font-size: 1em;
+  }
+}
 
 button {
   border: 1px solid var(--border);
@@ -64,4 +84,10 @@ input[type="text"] {
   border: 1px solid var(--border);
   outline: none;
   background-color: var(--background);
+  width: 100%;
+}
+
+.section-border {
+  border: 1px solid var(--border);
+  padding: .5em;
 }

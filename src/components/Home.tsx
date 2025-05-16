@@ -50,7 +50,7 @@ export default function Home() {
   }, [onFc, added]);
 
   return (
-    <div className="max-w-[400px] mx-auto px-4">
+    <div className="max-w-[600px] mx-auto px-4">
       <div className="mx-auto py-4">
         <h1 className="font-bold text-center mb-4 mt-4">Higher Permapool</h1>
         <Permapool />

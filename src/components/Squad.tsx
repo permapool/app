@@ -40,6 +40,7 @@ export default function Squad() {
     address: governanceAddress as Address,
     functionName: "getSquadMembersAndWeights",
     args: [],
+    scopeKey: `squad-${cacheBust}`,
   });
   const [members, weights] = (squadRes || [[], []]) as [string[], bigint[]];
   let totalWeight = 0n;
@@ -60,8 +61,10 @@ export default function Squad() {
   };
 
   return (
-    <div style={{ marginTop: '2em' }}>
-      <h3>{weights.length} Squad Members with {totalWeight} weight</h3>
+    <div className="section-border" style={{ marginTop: '2em' }}>
+      <h2>Squad</h2>
+      <h3>Members in squad: {weights.length}</h3>
+      <h3>Total weight: {totalWeight}</h3>
       <br />
       {
         members.map((m, i) => (
@@ -70,13 +73,13 @@ export default function Squad() {
               {shortAddress(m)}
             </div>
             <div className="small-font">
-              Weight: {weights[i]}
+              Weight: {weights[i]}&nbsp;
               {m == account.address ? (
                 <button
                   onClick={() => decrease(weights[i] - 1n)}
                   disabled={decreasing}
                 >
-                  decrease
+                  {decreasing ? 'decreasing...' : 'decrease'}
                 </button>
               ) : null}
             </div>
