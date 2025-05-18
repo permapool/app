@@ -1,20 +1,9 @@
-export const permapoolAddress = "0x3e48A9E748417500B57b7C2D78c6eC4F05Bd56B6";
+export const permapoolAddress = "0x5991C5FdE198170774BACfa7FB015bf036A32254";
 export const permapoolAbi = [
   {
     "inputs": [],
     "name": "collectFees",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -280,6 +269,32 @@ export const permapoolAbi = [
   },
   {
     "inputs": [],
+    "name": "getEthPaidToGovernance",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getEthPaidToGuardians",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "getGovernance",
     "outputs": [
       {
@@ -477,6 +492,19 @@ export const permapoolAbi = [
         "internalType": "struct Permapool.Donation[]",
         "name": "",
         "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getTokenPaidToGovernance",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",

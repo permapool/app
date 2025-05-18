@@ -113,7 +113,7 @@ export default function Permapool() {
       abi: governanceAbi,
       address: governanceAddress as Address,
       functionName: "claimFees",
-      args: [],
+      args: [permapoolAddress],
       chainId: base.id
     });
   };

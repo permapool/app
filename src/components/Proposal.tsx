@@ -11,7 +11,7 @@ import { base } from "wagmi/chains";
 import { switchChain } from '@wagmi/core'
 
 import { governanceAbi, governanceAddress } from "~/constants/abi-governance";
-import { ProposalData } from "~/lib/data";
+import { ProposalData, getNullAddress } from "~/lib/data";
 import { config } from '~/components/providers/WagmiProvider';
 
 export default function ProposalList({ proposal, isMember }: { proposal: ProposalData, isMember: boolean }) {
@@ -63,9 +63,17 @@ export default function ProposalList({ proposal, isMember }: { proposal: Proposa
   };
   return (
     <div>
-      <div>
-        Set {shortAddress(proposal.target)} weight to {proposal.weight}
-      </div>
+      {
+        proposal.permapool == getNullAddress() ? (
+          <div>
+            Set {shortAddress(proposal.target)} weight to {proposal.weight}
+          </div>
+        ) : (
+          <div>
+            Upgrade governance of {shortAddress(proposal.permapool)} to {shortAddress(proposal.target)}
+          </div>
+        )
+      }
       <div className="small-font">
         {
           proposal.passed ? 'Passed ✅' : (

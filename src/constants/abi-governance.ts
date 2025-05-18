@@ -1,7 +1,13 @@
-export const governanceAddress = "0xE9F6f60AaDE96f0e214179b4ef58B97f70c725C3";
+export const governanceAddress = "0x7aaA6DA12a456B12f282D600bc1dF1312Be15D7d";
 export const governanceAbi = [
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "permapool",
+        "type": "address"
+      }
+    ],
     "name": "claimFees",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -24,7 +30,12 @@ export const governanceAbi = [
     "inputs": [
       {
         "internalType": "address",
-        "name": "target",
+        "name": "permapool",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "governance",
         "type": "address"
       }
     ],
@@ -73,11 +84,6 @@ export const governanceAbi = [
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "permapool",
-        "type": "address"
-      },
       {
         "internalType": "address[]",
         "name": "squadMembers",
@@ -212,14 +218,14 @@ export const governanceAbi = [
             "type": "address"
           },
           {
+            "internalType": "address",
+            "name": "permapool",
+            "type": "address"
+          },
+          {
             "internalType": "uint256",
             "name": "weight",
             "type": "uint256"
-          },
-          {
-            "internalType": "bool",
-            "name": "governance",
-            "type": "bool"
           },
           {
             "internalType": "uint256",
@@ -257,14 +263,14 @@ export const governanceAbi = [
             "type": "address"
           },
           {
+            "internalType": "address",
+            "name": "permapool",
+            "type": "address"
+          },
+          {
             "internalType": "uint256",
             "name": "weight",
             "type": "uint256"
-          },
-          {
-            "internalType": "bool",
-            "name": "governance",
-            "type": "bool"
           },
           {
             "internalType": "uint256",
@@ -418,6 +424,25 @@ export const governanceAbi = [
         "type": "address"
       }
     ],
+    "name": "isGuardian",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "member",
+        "type": "address"
+      }
+    ],
     "name": "isSquadMember",
     "outputs": [
       {
@@ -463,32 +488,6 @@ export const governanceAbi = [
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "TOKEN",
-    "outputs": [
-      {
-        "internalType": "contract IERC20",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "WETH",
-    "outputs": [
-      {
-        "internalType": "contract IWETH",
-        "name": "",
-        "type": "address"
       }
     ],
     "stateMutability": "view",
