@@ -33,9 +33,9 @@ export default function ProposalList() {
         <div className="flex-shrink">
           {
             showCreateProposal ? (
-              <button onClick={() => setShowCreateProposal(false)}>Cancel</button>
+              <button onClick={() => setShowCreateProposal(false)}>cancel</button>
             ) : (
-              <button onClick={() => setShowCreateProposal(true)}>Create</button>
+              <button onClick={() => setShowCreateProposal(true)}>create</button>
             )
           }
         </div>
