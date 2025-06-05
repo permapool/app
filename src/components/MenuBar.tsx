@@ -40,7 +40,7 @@ const MenuBar: React.FC = () => {
   const { hours, minutes, seconds, timezone } = formatTime(time);
 
   return (
-    <div className="fixed bottom-0 left-0 w-full bg-white z-50 border-t border-t-[1px] border-t-dashed border-t-[#111111] text-black p-[10px] flex flex-row items-center justify-between">
+    <div className="fixed bottom-0 left-0 w-full z-50 border-t border-t-[1px] border-t-black p-[10px] flex flex-row items-center justify-between">
       <div>
         HIGHER
       </div>

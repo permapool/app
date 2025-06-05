@@ -25,7 +25,7 @@ export default function ProposalList() {
   });
   const isMember = (isMemberRes || false) as boolean;
   return (
-    <div className="section-border" style={{ marginTop: '2em' }}>
+    <div className="section-border">
       <div className="flex" style={{ alignItems: 'center' }}>
         <div className="flex-grow">
           <h2>Proposals</h2>

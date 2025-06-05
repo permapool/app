@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Address } from "viem";
 import {
   useAccount,
@@ -11,6 +11,14 @@ import { shortAddress } from "~/lib/formatting";
 import { governanceAbi, governanceAddress } from "~/constants/abi-governance";
 import { switchChain } from "@wagmi/core";
 import { config } from "~/components/providers/WagmiProvider";
+
+import { createPublicClient, http } from "viem";
+import { mainnet } from "viem/chains";
+
+const client = createPublicClient({
+  chain: mainnet,
+  transport: http(),
+});
 
 export default function Squad() {
   const account = useAccount();
@@ -49,6 +57,48 @@ export default function Squad() {
   let totalWeight = 0n;
   weights.forEach((w) => (totalWeight += w));
 
+  const [ensMap, setEnsMap] = useState<Record<string, string | null>>({});
+
+  const ensCache = useRef<Record<string, string | null>>({}); // persistent cache
+
+  useEffect(() => {
+    let cancelled = false;
+    const unresolved = members.filter((addr) => !(addr in ensCache.current));
+    if (unresolved.length === 0) {
+      setEnsMap({ ...ensCache.current });
+      return;
+    }
+
+    const batchSize = 3; // Number of lookups per batch
+    const delay = 300; // ms between batches
+
+    const fetchBatch = async (start: number) => {
+      const batch = unresolved.slice(start, start + batchSize);
+      await Promise.all(
+        batch.map(async (address) => {
+          try {
+            const ensName = await client.getEnsName({
+              address: address as `0x${string}`,
+            });
+            ensCache.current[address] = ensName;
+          } catch {
+            ensCache.current[address] = null;
+          }
+        })
+      );
+      setEnsMap({ ...ensCache.current }); // update UI as each batch completes
+      if (!cancelled && start + batchSize < unresolved.length) {
+        setTimeout(() => fetchBatch(start + batchSize), delay);
+      }
+    };
+
+    fetchBatch(0);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [members]);
+
   const decrease = async (newWeight: bigint) => {
     setDecreasing(true);
     if (account.chainId != base.id) {
@@ -64,23 +114,25 @@ export default function Squad() {
   };
 
   return (
-    <div className="section-border" style={{ marginTop: "2em" }}>
+    <div className="section-border">
       <h2>Squad</h2>
-      <h3>Members in squad: {weights.length}</h3>
-      <h3>Total weight: {totalWeight}</h3>
-      <br />
-      <div className="flex flex-row w-55 items-center justify-between">
+      <p>Members in squad: {weights.length}</p>
+      <p>Total weight: {totalWeight}</p>
+      <div className="flex flex-row w-55 items-center justify-between border-t-[1px] border-t-solid border-t-black pt-[10px] pb-[10px]">
         <div>ID</div>
         <div>WEIGHT</div>
       </div>
       {members.map((m, i) => (
         <div
           key={`member-${m}`}
-          className="flex flex-row w-55 items-center justify-between border-t-[1px] border-t-dotted border-t-[#fff] pt-[10px] pb-[10px] hover:bg-neutral-800 transition-colors duration-200"
+          className="flex flex-row w-55 items-center justify-between border-t-[1px] border-t-dotted border-t-[#fff] pt-[10px] pb-[10px] hover:bg-lghtgrey transition-colors duration-200"
         >
           <div>
-            ENS.eth <br />
-            {shortAddress(m)}
+            {ensMap[m] || <span className="small-font">{shortAddress(m)}</span>}{" "}
+            <br />
+            {ensMap[m] ? (
+              <span className="small-font">{shortAddress(m)}</span>
+            ) : null}
           </div>
           <div className="small-font">
             {weights[i]}&nbsp;
