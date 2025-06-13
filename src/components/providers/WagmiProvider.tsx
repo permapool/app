@@ -26,7 +26,15 @@ export default function Provider({ children }: { children: React.ReactNode }) {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <ConnectKitProvider>
+        <ConnectKitProvider
+        theme="auto"
+        customTheme={{
+          "--ck-connectbutton-background": "#000",
+          "--ck-connectbutton-color": "#fff",
+          "--ck-border-radius": "30px",
+          "--ck-font-family": "monospace",
+        }}
+        >
           {children}
         </ConnectKitProvider>
       </QueryClientProvider>

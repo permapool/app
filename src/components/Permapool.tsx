@@ -182,7 +182,7 @@ export default function Permapool() {
                 <div className="flex flex-row justify-between gap-[10px] text-center mb-[10px] mx-[1rem] border-b-[0.5px] border-b-black">
                   <Tooltip content={formatUnits(lpEth, 18)}>
                     <div>
-                      ~ {Number(formatUnits(lpEth, 18)).toFixed(4)}
+                      ~ {Number(formatUnits(lpEth, 18)).toFixed(2)}
                     </div>
                   </Tooltip>
                   <div className="small-font">ETH</div>
@@ -190,7 +190,7 @@ export default function Permapool() {
               <div className="flex flex-row justify-between gap-[10px] text-center mb-[10px] mx-[1rem] border-b-[0.5px] border-b-black">
                 <Tooltip content={formatUnits(lpToken, 18)}>
                   <div className="text-center">
-                    ~ {Number(formatUnits(lpToken, 18)).toFixed(4)}
+                    ~ {Number(formatUnits(lpToken, 18)).toFixed(2)}
                   </div>
                 </Tooltip>
                 <div className="small-font">HIGHER</div>
@@ -203,7 +203,7 @@ export default function Permapool() {
               <div className="flex flex-row justify-between gap-[10px] text-center mb-[10px] mx-[1rem] border-b-[0.5px] border-b-black">
                 <Tooltip content={formatUnits(unclaimedEthFees, 18)}>
                   <div className="text-center">
-                    ~ {Number(formatUnits(unclaimedEthFees, 18)).toFixed(4)}
+                    ~ {Number(formatUnits(unclaimedEthFees, 18)).toFixed(2)}
                   </div>
                 </Tooltip>
                 <div className="small-font">ETH</div>
@@ -211,7 +211,7 @@ export default function Permapool() {
               <div className="flex flex-row justify-between gap-[10px] text-center mb-[10px] mx-[1rem] border-b-[0.5px] border-b-black">
                 <Tooltip content={formatUnits(unclaimedTokenFees, 18)}>
                   <div className="text-center">
-                    ~ {Number(formatUnits(unclaimedTokenFees, 18)).toFixed(4)}
+                    ~ {Number(formatUnits(unclaimedTokenFees, 18)).toFixed(2)}
                   </div>
                 </Tooltip>
                 <div className="small-font">HIGHER</div>
@@ -227,7 +227,7 @@ export default function Permapool() {
               <div className="flex flex-row justify-between gap-[10px] text-center mb-[10px] mx-[1rem] border-b-[0.5px] border-b-black">
                 <Tooltip content={formatUnits(claimedEthFees, 18)}>
                   <div className="text-center">
-                    ~ {Number(formatUnits(claimedEthFees, 18)).toFixed(4)}
+                    ~ {Number(formatUnits(claimedEthFees, 18)).toFixed(2)}
                   </div>
                 </Tooltip>
                 <div className="small-font">ETH</div>
@@ -235,7 +235,7 @@ export default function Permapool() {
               <div className="flex flex-row justify-between gap-[10px] text-center mb-[10px] mx-[1rem] border-b-[0.5px] border-b-black">
                 <Tooltip content={formatUnits(claimedTokenFees, 18)}>
                   <div className="text-center">
-                    ~ {Number(formatUnits(claimedTokenFees, 18)).toFixed(4)}
+                    ~ {Number(formatUnits(claimedTokenFees, 18)).toFixed(2)}
                   </div>
                 </Tooltip>
                 <div className="small-font">HIGHER</div>

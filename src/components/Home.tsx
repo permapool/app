@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import Squad from "./Squad";
 import ProposalList from "./ProposalList";
 import Permapool from "./Permapool";
-import MenuBar from "./MenuBar";
 import Television from "./Television";
 import Clicker from "./ui/Clicker";
 
@@ -61,7 +60,7 @@ export default function Home() {
   }, [onFc, added]);
 
   return (
-    <div className="max-w-[1100px] mx-auto px-4 pb-20">
+    <div className="max-w-[1100px] mx-auto px-4 pb-20 pt-[7%]">
       <div className="mx-auto py-4">
         <AnimatePresence>
           {showPermapool && (
@@ -109,7 +108,6 @@ export default function Home() {
           )}
         </AnimatePresence>
       </div>
-      <MenuBar />
       <Television />
       <Clicker togglePermapool={togglePermapool} toggleSquad={toggleSquad} toggleProposals={toggleProposals} />
     </div>
