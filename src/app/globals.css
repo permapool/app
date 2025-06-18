@@ -90,25 +90,11 @@ hr {
   padding: 0;
 }
 
-@media(max-width: 600px) {
-  h1 {
-    font-size: 1.5em;
-  }
-  h2 {
-    font-size: 1.25em;
-  }
-  h3 {
-    font-size: 1em;
-  }
-}
-
 button {
   border: none;
-  padding: 10px 15px;
+  padding: 0.5em 1em;
   background-color: var(--green);
   transition: all .2s ease-in-out;
-  min-width: 6px;
-  min-height: 6px;
 }
 
 button:hover {
@@ -118,15 +104,18 @@ button:hover {
 
 button:disabled {
   cursor: not-allowed;
+  opacity: 0.5;
+  background-color: var(--lghtgrey);
+  color: var(--grey);
 }
 
 input[type="text"] {
-  padding: 0px 10px;
+  padding: 0em 1em;
   outline: none;
   border: 0.5px solid var(--lghtgrey);
   min-height: 100%;
   width: 100%;
-  color: var(--background);
+  color: var(--foreground);
 }
 
 .section-border {
@@ -167,4 +156,20 @@ section {
   background-color: var(--background);
   padding: 0.5em;
   margin-top: 2px;
+}
+
+@media(max-width: 600px) {
+  h1 {
+    font-size: 0.9em;
+  }
+  h2 {
+    font-size: 0.6em;
+  }
+  h3 {
+    font-size: 0.5em;
+  }
+
+  button {
+    font-size: small;
+  }
 }

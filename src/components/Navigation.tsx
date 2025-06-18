@@ -48,11 +48,11 @@ export default function Navigation() {
       <div className="flex items-center flex-grow">
         <Link href="/">HIGHER</Link>
       </div>
-      <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center">
-        <span>↑↑↑</span>
+      <div className="absolute left-1/2 transform -translate-x-1/2 hidden md:flex items-center">
+      <span>↑↑↑</span>
       </div>
-      <div className="flex items-center gap-6">
-        <p>
+      <div className="flex items-center gap-2 md:gap-6">
+        <p className="text-xs md:text-base">
           {hours}
           <span>{blink ? ":" : " "}</span>
           {minutes}

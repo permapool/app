@@ -1,18 +1,23 @@
 import React from "react";
 import { ChromeButton } from "./ChromeButton";
+import ClickerTooltip from "./ClickerTooltip";
 
 type ClickerProps = {
   togglePermapool: () => void;
   toggleSquad: () => void;
   toggleProposals: () => void;
+
+  switchChannel: () => void;
+  switchChannelDown: () => void;
 };
 
 const Clicker: React.FC<ClickerProps> = ({
   togglePermapool,
   toggleSquad,
   toggleProposals,
+  switchChannel,
+  switchChannelDown,
 }) => {
-  const switchChannel = () => {};
   const toggleInfo = () => {};
 
   return (
@@ -20,10 +25,10 @@ const Clicker: React.FC<ClickerProps> = ({
       {/* Channel Cluster */}
       <div className="flex flex-col space-y-4 ">
         <div className="flex flex-col gap-1">
-          <ChromeButton onClick={() => switchChannel()} className="h-[50%]">
+          <ChromeButton onClick={switchChannel} className="h-[50%]">
             <span className="small-font">↑↑↑</span>
           </ChromeButton>
-          <ChromeButton onClick={() => switchChannel()} className="h-[50%]">
+          <ChromeButton onClick={switchChannelDown} className="h-[50%]">
             <span className="flex flex-row small-font text-black">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -59,10 +64,18 @@ const Clicker: React.FC<ClickerProps> = ({
 
       {/* Action Cluster */}
       <div className="flex flex-row space-x-4">
-        <ChromeButton onClick={togglePermapool}>$$$</ChromeButton>
-        <ChromeButton onClick={toggleProposals}>¶¶¶</ChromeButton>
-        <ChromeButton onClick={toggleSquad}>^^^</ChromeButton>
-        <ChromeButton onClick={toggleInfo}>¿¿¿</ChromeButton>
+        <ClickerTooltip content="Permapool">
+          <ChromeButton onClick={togglePermapool}>$$$</ChromeButton>
+        </ClickerTooltip>
+        <ClickerTooltip content="Proposals">
+          <ChromeButton onClick={toggleProposals}>¶¶¶</ChromeButton>
+        </ClickerTooltip>
+        <ClickerTooltip content="Squad">
+          <ChromeButton onClick={toggleSquad}>§§§</ChromeButton>
+        </ClickerTooltip>
+        <ClickerTooltip content="Info">
+          <ChromeButton onClick={toggleInfo}>¿¿¿</ChromeButton>
+        </ClickerTooltip>
       </div>
     </div>
   );

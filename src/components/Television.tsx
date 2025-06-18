@@ -1,10 +1,14 @@
 import React from "react";
 
-const Television: React.FC = () => {
+type TelevisionProps = {
+  src: string;
+};
+
+const Television: React.FC<TelevisionProps> = ({ src }) => {
   return (
     <div className="fixed top-0 left-0 w-screen h-screen -z-10 overflow-hidden">
       <video
-        src="/water-drop-loop.mp4"
+        src={src}
         autoPlay
         loop
         muted

@@ -89,6 +89,36 @@ export default function Permapool() {
     hash: writeData,
   });
 
+  const { data: lastClaimTimeRes } = useReadContract({
+    abi: governanceAbi,
+    address: governanceAddress as Address,
+    functionName: "getLastFeeClaimTime",
+    args: [account.address],
+    scopeKey: `permapool-last-claim-${account.address}`,
+  });
+  const lastClaimTime = (lastClaimTimeRes || 0n) as bigint;
+
+  const [claimCountdown, setClaimCountdown] = useState(0);
+
+  useEffect(() => {
+    if (!lastClaimTime) return;
+    const interval = setInterval(() => {
+      const now = Math.floor(Date.now() / 1000);
+      const nextClaim = Number(lastClaimTime) + 604800;
+      setClaimCountdown(Math.max(nextClaim - now, 0));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [lastClaimTime]);
+
+  function formatCountdown(seconds: number) {
+    if (seconds <= 0) return "Ready!";
+    const d = Math.floor(seconds / 86400);
+    const h = Math.floor((seconds % 86400) / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${d}d ${h}h ${m}m ${s}s`;
+  }
+
   useEffect(() => {
     if (writeError) {
       setClaiming(false);
@@ -135,7 +165,7 @@ export default function Permapool() {
     <div className="section-border">
       <h2>Support the Network</h2>
       <div>
-        <div className="max-w-[66%] mx-auto">
+        <div className="max-w-full md:max-w-[66%] mx-auto">
           <p className="subtitle">Become a higher.zip accomplice</p>
           <div className="flex flex-row justify-between border-t-[1px] border-t-dotted border-t-[#fffff8]">
             <p>Donate</p>
@@ -143,50 +173,50 @@ export default function Permapool() {
           </div>
           <p>higher.zip runs on bandwidth and community coin.</p>
           <p>Tap in and help us keep the broadcast going.</p>
-          <div className="flex">
-            <div className="flex-shrink">ETH&nbsp;</div>
-            <div className="flex-grow">
-              <input
-                type="text"
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-              />
+          <div className="flex flex-col">
+            <div className="flex flex-row">
+              <div className="flex items-center mr-2">ETH</div>
+              <div className="flex-grow">
+                <input
+                  type="text"
+                  value={value}
+                  onChange={(e) => setValue(e.target.value)}
+                />
+              </div>
+              <div className="flex-shrink">
+                <button onClick={donate} disabled={donating}>
+                  {donating ? "donating..." : "inject liquidity"}
+                </button>
+              </div>
             </div>
-            <div className="flex-shrink">
-              <button onClick={donate} disabled={donating}>
-                {donating ? "donating..." : "inject liquidity"}
-              </button>
-            </div>
-          </div>
-          <div>
-            <div className="mt-[10px] flex flex-row gap-[10px] w-full">
-              <button className="flex-grow" onClick={() => setValue("0.1")}>
-                0.1 eth
-              </button>
-              <button className="flex-grow" onClick={() => setValue("0.5")}>
-                0.5 eth
-              </button>
-              <button className="flex-grow" onClick={() => setValue("1")}>
-                1 eth
-              </button>
-              <button className="flex-grow" onClick={() => setValue("5")}>
-                5 eth
-              </button>
+            <div>
+              <div className="mt-[10px] flex flex-row gap-[10px] w-full">
+                <button className="flex-grow" onClick={() => setValue("0.1")}>
+                  0.1 eth
+                </button>
+                <button className="flex-grow" onClick={() => setValue("0.5")}>
+                  0.5 eth
+                </button>
+                <button className="flex-grow" onClick={() => setValue("1")}>
+                  1 eth
+                </button>
+                <button className="flex-grow" onClick={() => setValue("5")}>
+                  5 eth
+                </button>
+              </div>
             </div>
           </div>
           <br />
-          <div className="flex flex-row justify-between gap-[10px]">
-            <div className="text-center w-1/3 border-[0.5px] border-solid border-black">
+          <div className="flex flex-col md:flex-row justify-between gap-[10px]">
+            <div className="text-center w-full md:w-1/3 border-[0.5px] border-solid border-black">
               <h3>Locked in LP</h3>
               <br />
-                <div className="flex flex-row justify-between gap-[10px] text-center mb-[10px] mx-[1rem] border-b-[0.5px] border-b-black">
-                  <Tooltip content={formatUnits(lpEth, 18)}>
-                    <div>
-                      ~ {Number(formatUnits(lpEth, 18)).toFixed(2)}
-                    </div>
-                  </Tooltip>
-                  <div className="small-font">ETH</div>
-                </div>
+              <div className="flex flex-row justify-between gap-[10px] text-center mb-[10px] mx-[1rem] border-b-[0.5px] border-b-black">
+                <Tooltip content={formatUnits(lpEth, 18)}>
+                  <div>~ {Number(formatUnits(lpEth, 18)).toFixed(2)}</div>
+                </Tooltip>
+                <div className="small-font">ETH</div>
+              </div>
               <div className="flex flex-row justify-between gap-[10px] text-center mb-[10px] mx-[1rem] border-b-[0.5px] border-b-black">
                 <Tooltip content={formatUnits(lpToken, 18)}>
                   <div className="text-center">
@@ -196,8 +226,7 @@ export default function Permapool() {
                 <div className="small-font">HIGHER</div>
               </div>
             </div>
-
-            <div className="text-center w-1/3 border-[0.5px] border-solid border-black">
+            <div className="text-center w-full md:w-1/3 border-[0.5px] border-solid border-black">
               <h3>Unclaimed Fees</h3>
               <br />
               <div className="flex flex-row justify-between gap-[10px] text-center mb-[10px] mx-[1rem] border-b-[0.5px] border-b-black">
@@ -216,12 +245,15 @@ export default function Permapool() {
                 </Tooltip>
                 <div className="small-font">HIGHER</div>
               </div>
-              <button className="w-full" onClick={claim} disabled={claiming}>
+              <button
+                className="w-full"
+                onClick={claim}
+                disabled={claiming || claimCountdown > 0}
+              >
                 {claiming ? "claiming..." : "claim"}
               </button>
             </div>
-
-            <div className="text-center w-1/3 border-[0.5px] border-solid border-black">
+            <div className="text-center w-full md:w-1/3 border-[0.5px] border-solid border-black">
               <h3>Total Claimed Fees</h3>
               <br />
               <div className="flex flex-row justify-between gap-[10px] text-center mb-[10px] mx-[1rem] border-b-[0.5px] border-b-black">
@@ -241,6 +273,10 @@ export default function Permapool() {
                 <div className="small-font">HIGHER</div>
               </div>
             </div>
+          </div>
+          <div className="text-center mx-[1rem] my-[2rem]">
+            <h3>Next claim</h3>
+            <span>{formatCountdown(claimCountdown)}</span>
           </div>
         </div>
         <div>

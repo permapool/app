@@ -11,14 +11,14 @@ interface ChromeButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement
   }: ChromeButtonProps) {
     return (
       <button
-        className={`
-          relative w-full max-w-xs mx-auto block
-          text-sm text-transparent
-          py-3 px-6 rounded-full transition-all
-          bg-gradient-to-b from-[#D5D8D8] to-[#818C8A]
-          shadow-md overflow-hidden
-          disabled:opacity-50 disabled:cursor-not-allowed
-          ${className}
+      className={`
+        relative w-full max-w-xs mx-auto block
+        text-[0.3em] sm:text-sm
+        py-3 px-6 rounded-full transition-all
+        bg-gradient-to-b from-[#D5D8D8] to-[#818C8A]
+        shadow-md overflow-hidden
+        disabled:opacity-50 disabled:cursor-not-allowed
+        ${className}
         `}
         {...props}
       >

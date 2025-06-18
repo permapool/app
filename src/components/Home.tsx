@@ -10,6 +10,11 @@ import Permapool from "./Permapool";
 import Television from "./Television";
 import Clicker from "./ui/Clicker";
 
+const channels = [
+  "/water-drop-loop.mp4",
+  "/higher-horse.mp4",
+];
+
 export default function Home() {
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [context, setContext] = useState<Context.FrameContext>();
@@ -22,6 +27,23 @@ export default function Home() {
   const toggleSquad = () => setShowSquad((prev) => !prev);
   const toggleProposals = () => setShowProposals((prev) => !prev);
   const togglePermapool = () => setShowPermapool((prev) => !prev);
+
+  const [channelIdx, setChannelIdx] = useState(0);
+  const switchChannel = () => {
+    setChannelIdx(idx => {
+      const newIdx = (idx + 1) % channels.length;
+      console.log(`[CHANNEL UP] Switched to channel ${newIdx}: ${channels[newIdx]}`);
+      return newIdx;
+    });
+  };
+  
+  const switchChannelDown = () => {
+    setChannelIdx(idx => {
+      const newIdx = (idx - 1 + channels.length) % channels.length;
+      console.log(`[CHANNEL DOWN] Switched to channel ${newIdx}: ${channels[newIdx]}`);
+      return newIdx;
+    });
+  };
 
   const added = frameAdded || context?.client?.added || false;
   const fid = context?.user?.fid;
@@ -108,8 +130,14 @@ export default function Home() {
           )}
         </AnimatePresence>
       </div>
-      <Television />
-      <Clicker togglePermapool={togglePermapool} toggleSquad={toggleSquad} toggleProposals={toggleProposals} />
+      <Television src={channels[channelIdx]} />
+      <Clicker
+        togglePermapool={togglePermapool}
+        toggleSquad={toggleSquad}
+        toggleProposals={toggleProposals}
+        switchChannel={switchChannel}
+        switchChannelDown={switchChannelDown}
+      />
     </div>
   );
 }
