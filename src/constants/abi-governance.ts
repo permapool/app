@@ -1,4 +1,4 @@
-export const governanceAddress = "0x7aaA6DA12a456B12f282D600bc1dF1312Be15D7d";
+export const governanceAddress = "0x42B79e38aa93eB0204a75263505A00c8855b37B9";
 export const governanceAbi = [
   {
     "inputs": [
@@ -24,6 +24,76 @@ export const governanceAbi = [
     "name": "decreaseWeight",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "squadMembers",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "squadWeights",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "feeClaimDelay",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "proposalDuration",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "payDonationFees",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amountToken",
+        "type": "uint256"
+      }
+    ],
+    "name": "payLpFees",
+    "outputs": [],
+    "stateMutability": "payable",
     "type": "function"
   },
   {
@@ -64,7 +134,33 @@ export const governanceAbi = [
   },
   {
     "inputs": [],
-    "name": "sendFees",
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "delay",
+        "type": "uint256"
+      }
+    ],
+    "name": "setFeeClaimDelay",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "duration",
+        "type": "uint256"
+      }
+    ],
+    "name": "setProposalDuration",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -85,33 +181,15 @@ export const governanceAbi = [
   {
     "inputs": [
       {
-        "internalType": "address[]",
-        "name": "squadMembers",
-        "type": "address[]"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "squadWeights",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "uint256",
-        "name": "feeClaimDelay",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "feeSendDelay",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "proposalDuration",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
       }
     ],
+    "name": "transferOwnership",
+    "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "constructor"
+    "type": "function"
   },
   {
     "inputs": [
@@ -144,8 +222,14 @@ export const governanceAbi = [
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "FEE_SEND_DELAY",
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "donation",
+        "type": "uint256"
+      }
+    ],
+    "name": "getDonationFees",
     "outputs": [
       {
         "internalType": "uint256",
@@ -153,7 +237,7 @@ export const governanceAbi = [
         "type": "uint256"
       }
     ],
-    "stateMutability": "view",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -393,6 +477,19 @@ export const governanceAbi = [
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "getUnclaimedSquadEth",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -475,6 +572,19 @@ export const governanceAbi = [
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",

@@ -61,7 +61,7 @@ export default function Permapool() {
   const { data: claimedFeesRes } = useReadContract({
     abi: permapoolAbi,
     address: permapoolAddress as Address,
-    functionName: "getTotalEthAndTokenFees",
+    functionName: "getTotalLpFees",
     args: [],
     scopeKey: `permapool-${cacheBust}`,
   });
@@ -93,10 +93,19 @@ export default function Permapool() {
     abi: governanceAbi,
     address: governanceAddress as Address,
     functionName: "getLastFeeClaimTime",
-    args: [account.address],
-    scopeKey: `permapool-last-claim-${account.address}`,
+    args: [],
+    scopeKey: `permapool-last-claim-${cacheBust}`,
   });
   const lastClaimTime = (lastClaimTimeRes || 0n) as bigint;
+
+  const { data: feeClaimDelayRes } = useReadContract({
+    abi: governanceAbi,
+    address: governanceAddress as Address,
+    functionName: "FEE_CLAIM_DELAY",
+    args: [],
+    scopeKey: `permapool-fee-flaim-delay-${cacheBust}`,
+  });
+  const feeClaimDelay = (feeClaimDelayRes || 0n) as bigint;
 
   const [claimCountdown, setClaimCountdown] = useState(0);
 
@@ -104,11 +113,11 @@ export default function Permapool() {
     if (!lastClaimTime) return;
     const interval = setInterval(() => {
       const now = Math.floor(Date.now() / 1000);
-      const nextClaim = Number(lastClaimTime) + 604800;
+      const nextClaim = Number(lastClaimTime + feeClaimDelay);
       setClaimCountdown(Math.max(nextClaim - now, 0));
     }, 1000);
     return () => clearInterval(interval);
-  }, [lastClaimTime]);
+  }, [lastClaimTime, feeClaimDelay]);
 
   function formatCountdown(seconds: number) {
     if (seconds <= 0) return "Ready!";
