@@ -1,4 +1,4 @@
-export const governanceAddress = "0x42B79e38aa93eB0204a75263505A00c8855b37B9";
+export const governanceAddress = "0x7f3C9E8D37d55b405a2014E50fd3a1A3e84BF88c";
 export const governanceAbi = [
   {
     "inputs": [
