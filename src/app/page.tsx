@@ -8,13 +8,13 @@ const frame = {
   version: "next",
   imageUrl: `${appUrl}/frame-image.png`,
   button: {
-    title: "GM",
+    title: "Open",
     action: {
       type: "launch_frame",
-      name: "Higher",
+      name: "Higher.zip",
       url: appUrl,
       splashImageUrl: `${appUrl}/splash.png`,
-      splashBackgroundColor: "#222222",
+      splashBackgroundColor: "#000000",
     },
   },
 };
@@ -23,10 +23,10 @@ export const revalidate = 300;
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: "Higher",
+    title: "Higher.zip",
     openGraph: {
-      title: "Higher",
-      description: "Higher permapool",
+      title: "Higher.zip",
+      description: "Higher higher higher",
     },
     other: {
       "fc:frame": JSON.stringify(frame),
