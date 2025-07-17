@@ -51,8 +51,8 @@ export async function POST(request: NextRequest) {
         await setUserNotificationDetails(fid, event.notificationDetails);
         await sendFrameNotification({
           fid,
-          title: "Tipn added to Warpcast",
-          body: "DM @niftytime with any feedback/requests",
+          title: "HIGHER.ZIP added",
+          body: "higher higher higher",
         });
       } else {
         await deleteUserNotificationDetails(fid);

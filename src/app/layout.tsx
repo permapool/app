@@ -3,8 +3,8 @@ import "~/app/globals.css";
 import Client from "./client";
 
 export const metadata: Metadata = {
-  title: "Higher permapool",
-  description: "Higher higher higher.",
+  title: "HIGHER.ZIP",
+  description: "higher higher higher",
   icons: [
     { rel: "icon", url: "/favicon-96x96.png", type: "image/png", sizes: "96x96" },
     { rel: "icon", url: "/favicon.svg", type: "image/svg+xml" },
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     { rel: "apple-touch-icon", url: "/apple-touch-icon.png", sizes: "180x180" },
   ],
   appleWebApp: {
-    title: "Higher",
+    title: "HIGHER.ZIP",
   },
   manifest: "/site.webmanifest",
 };

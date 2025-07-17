@@ -11,7 +11,7 @@ const frame = {
     title: "Open",
     action: {
       type: "launch_frame",
-      name: "Higher.zip",
+      name: "HIGHER.ZIP",
       url: appUrl,
       splashImageUrl: `${appUrl}/splash.png`,
       splashBackgroundColor: "#000000",
@@ -23,9 +23,9 @@ export const revalidate = 300;
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: "Higher.zip",
+    title: "HIGHER.ZIP",
     openGraph: {
-      title: "Higher.zip",
+      title: "HIGHER.ZIP",
       description: "Higher higher higher",
     },
     other: {
