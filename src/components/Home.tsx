@@ -7,13 +7,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import Squad from "./Squad";
 import ProposalList from "./ProposalList";
 import Permapool from "./Permapool";
+import Manifesto from "./Manifesto";
+
 import Television from "./Television";
 import Clicker from "./ui/Clicker";
 
-const channels = [
-  "/water-drop-loop.mp4",
-  "/higher-horse.mp4",
-];
+const channels = ["/higher-horse.mp4", "/how-it-works.mp4"];
 
 export default function Home() {
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
@@ -24,23 +23,29 @@ export default function Home() {
   const [showPermapool, setShowPermapool] = useState(false);
   const [showSquad, setShowSquad] = useState(false);
   const [showProposals, setShowProposals] = useState(false);
+  const [showManifesto, setShowManifesto] = useState(false);
   const toggleSquad = () => setShowSquad((prev) => !prev);
   const toggleProposals = () => setShowProposals((prev) => !prev);
   const togglePermapool = () => setShowPermapool((prev) => !prev);
+  const toggleManifesto = () => setShowManifesto((prev) => !prev);
 
   const [channelIdx, setChannelIdx] = useState(0);
   const switchChannel = () => {
-    setChannelIdx(idx => {
+    setChannelIdx((idx) => {
       const newIdx = (idx + 1) % channels.length;
-      console.log(`[CHANNEL UP] Switched to channel ${newIdx}: ${channels[newIdx]}`);
+      console.log(
+        `[CHANNEL UP] Switched to channel ${newIdx}: ${channels[newIdx]}`
+      );
       return newIdx;
     });
   };
-  
+
   const switchChannelDown = () => {
-    setChannelIdx(idx => {
+    setChannelIdx((idx) => {
       const newIdx = (idx - 1 + channels.length) % channels.length;
-      console.log(`[CHANNEL DOWN] Switched to channel ${newIdx}: ${channels[newIdx]}`);
+      console.log(
+        `[CHANNEL DOWN] Switched to channel ${newIdx}: ${channels[newIdx]}`
+      );
       return newIdx;
     });
   };
@@ -74,6 +79,9 @@ export default function Home() {
     }
   };
 
+  const [isMuted, setIsMuted] = useState(true);
+  const toggleMute = () => setIsMuted((m) => !m);
+
   const onFc = !!context;
   useEffect(() => {
     if (onFc && !added) {
@@ -84,59 +92,93 @@ export default function Home() {
   return (
     <div className="max-w-[1100px] mx-auto px-4 pb-20 pt-[7%]">
       <div className="mx-auto py-4">
-        <AnimatePresence>
-          {showPermapool && (
-            <motion.div
-              key="permapool"
-              initial={{ y: "100%", opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: "100%", opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            >
-              <section>
-                <Permapool />
-              </section>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        <AnimatePresence>
-          {showSquad && (
-            <motion.div
-              key="squad"
-              initial={{ y: "100%", opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: "100%", opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            >
-              <section>
-                <Squad />
-              </section>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        <AnimatePresence>
-          {showProposals && (
-            <motion.div
-              key="proposals"
-              initial={{ y: "100%", opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: "100%", opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            >
-              <section>
-                <ProposalList />
-              </section>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <motion.div layout>
+          <AnimatePresence>
+            {showPermapool && (
+              <motion.div
+                key="permapool"
+                layout
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                style={{ overflow: "hidden" }}
+              >
+                <section>
+                  <Permapool />
+                </section>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <AnimatePresence>
+            {showSquad && (
+              <motion.div
+                key="squad"
+                layout
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                style={{ overflow: "hidden" }}
+              >
+                <section>
+                  <Squad />
+                </section>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <AnimatePresence>
+            {showProposals && (
+              <motion.div
+                key="proposals"
+                layout
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                style={{ overflow: "hidden" }}
+              >
+                <section>
+                  <ProposalList />
+                </section>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <AnimatePresence>
+            {showManifesto && (
+              <motion.div
+                key="manifesto"
+                layout
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                style={{ overflow: "hidden" }}
+              >
+                <section>
+                  <Manifesto
+                  onClose={() => {
+                    setShowManifesto(false);
+                    setChannelIdx(1);
+                    }}
+                  />
+                </section>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </div>
-      <Television src={channels[channelIdx]} />
+
+      <Television src={channels[channelIdx]} isMuted={isMuted} />
       <Clicker
         togglePermapool={togglePermapool}
         toggleSquad={toggleSquad}
         toggleProposals={toggleProposals}
+        toggleManifesto={toggleManifesto}
         switchChannel={switchChannel}
         switchChannelDown={switchChannelDown}
+        isMuted={isMuted}
+        toggleMute={toggleMute}
       />
     </div>
   );

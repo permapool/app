@@ -6,22 +6,28 @@ type ClickerProps = {
   togglePermapool: () => void;
   toggleSquad: () => void;
   toggleProposals: () => void;
+  toggleManifesto: () => void;
 
   switchChannel: () => void;
   switchChannelDown: () => void;
+
+  isMuted: boolean;
+  toggleMute: () => void;
 };
 
 const Clicker: React.FC<ClickerProps> = ({
   togglePermapool,
   toggleSquad,
   toggleProposals,
+  toggleManifesto,
   switchChannel,
   switchChannelDown,
-}) => {
-  const toggleInfo = () => {};
 
+  isMuted,
+  toggleMute,
+}) => {
   return (
-    <div className="flex space-x-4 p-4 fixed bottom-10 right-[50%] translate-x-1/2">
+    <div className="flex space-x-4 p-4 fixed bottom-10 right-[50%] translate-x-1/2 max-w-full w-full sm:right-0 sm:translate-x-0">
       {/* Channel Cluster */}
       <div className="flex flex-col space-y-4 ">
         <div className="flex flex-col gap-1">
@@ -73,8 +79,13 @@ const Clicker: React.FC<ClickerProps> = ({
         <ClickerTooltip content="Squad">
           <ChromeButton onClick={toggleSquad}>§§§</ChromeButton>
         </ClickerTooltip>
-        <ClickerTooltip content="Info">
-          <ChromeButton onClick={toggleInfo}>¿¿¿</ChromeButton>
+        <ClickerTooltip content="Manifesto">
+          <ChromeButton onClick={toggleManifesto}>¿¿¿</ChromeButton>
+        </ClickerTooltip>
+        <ClickerTooltip content="Mute">
+          <ChromeButton onClick={toggleMute} className="h-[50%]">
+            {isMuted ? "≃" : "≄"}
+          </ChromeButton>
         </ClickerTooltip>
       </div>
     </div>

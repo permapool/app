@@ -171,10 +171,10 @@ export default function Permapool() {
   };
 
   return (
-    <div className="section-border">
+    <div className="section-border mx-auto">
       <h2>Support the Network</h2>
       <div>
-        <div className="max-w-full md:max-w-[66%] mx-auto">
+        <div>
           <p className="subtitle">Become a higher.zip accomplice</p>
           <div className="flex flex-row justify-between border-t-[1px] border-t-dotted border-t-[#fffff8]">
             <p>Donate</p>
@@ -200,6 +200,9 @@ export default function Permapool() {
             </div>
             <div>
               <div className="mt-[10px] flex flex-row gap-[10px] w-full">
+                <button className="flex-grow" onClick={() => setValue("0.01")}>
+                  0.01 eth
+                </button>
                 <button className="flex-grow" onClick={() => setValue("0.1")}>
                   0.1 eth
                 </button>
