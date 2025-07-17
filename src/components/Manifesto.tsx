@@ -3,7 +3,7 @@ import { ChromeButton } from "./ui/ChromeButton";
 
 export default function Manifesto({ onClose }: { onClose: () => void }) {
   return (
-    <div className="section-border">
+    <div className="section-border z-102">
       <h2>Manifesto</h2>
       <p>Higher is a movement.</p>
       <p>

@@ -12,7 +12,9 @@ import Manifesto from "./Manifesto";
 import Television from "./Television";
 import Clicker from "./ui/Clicker";
 
-const channels = ["/higher-horse.mp4", "/how-it-works.mp4"];
+import { useMinimize } from "./providers/MinimizeMenus";
+
+const channels = ["/higher-horse.mp4", "/how-it-works.mp4", "/water-drop-loop.mp4", "/bench.mp4", "/runner.mp4", "higherstatuefinal-nograin.mov"];
 
 export default function Home() {
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
@@ -81,6 +83,7 @@ export default function Home() {
 
   const [isMuted, setIsMuted] = useState(true);
   const toggleMute = () => setIsMuted((m) => !m);
+  const { setMinimized } = useMinimize();
 
   const onFc = !!context;
   useEffect(() => {
@@ -90,6 +93,22 @@ export default function Home() {
   }, [onFc, added]);
 
   return (
+    <>
+  <div
+    style={{
+      position: "fixed",
+      top: "10vh",
+      left: 0,
+      width: "100vw",
+      height: "70vh",
+      zIndex: 1,
+      cursor: "pointer",
+      background: "transparent"
+    }}
+    onClick={() => setMinimized((prev) => !prev)}
+    aria-label="Minimize UI"
+  />
+
     <div className="max-w-[1100px] mx-auto px-4 pb-20 pt-[7%]">
       <div className="mx-auto py-4">
         <motion.div layout>
@@ -181,5 +200,6 @@ export default function Home() {
         toggleMute={toggleMute}
       />
     </div>
+    </>
   );
 }

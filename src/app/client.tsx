@@ -2,6 +2,7 @@
 
 import WagmiProvider from "~/components/providers/WagmiProvider";
 import Navigation from "~/components/Navigation";
+import { MinimizeMenusProvider } from "~/components/providers/MinimizeMenus";
 
 export default function Client({
   children,
@@ -11,8 +12,10 @@ export default function Client({
   
   return (
     <WagmiProvider>
-      <Navigation />
-      {children}
+      <MinimizeMenusProvider>
+        <Navigation />
+        {children}
+      </MinimizeMenusProvider>
     </WagmiProvider>
   );
 }

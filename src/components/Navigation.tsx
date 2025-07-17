@@ -3,6 +3,8 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { StyledConnectKitButton } from "./ui/StyledConnectKitButton";
 
+import { useMinimize } from "./providers/MinimizeMenus";
+
 interface TimeFormat {
   hours: string;
   minutes: string;
@@ -13,6 +15,8 @@ interface TimeFormat {
 export default function Navigation() {
   const [time, setTime] = useState<Date>(new Date());
   const [blink, setBlink] = useState<boolean>(true);
+
+  const { minimized } = useMinimize();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -43,8 +47,10 @@ export default function Navigation() {
 
   const { hours, minutes, seconds, timezone } = formatTime(time);
 
+  if (minimized) return null;
+
   return (
-    <div className="fixed flex px-4 border-b border-b-[1px] border-b-black items-center justify-between w-full z-50 flex-row backdrop-blur-sm bg-white/5">
+    <div className="fixed flex px-4 border-b border-b-[1px] border-b-black items-center justify-between w-full z-50 flex-row backdrop-blur-sm bg-white/100">
       <div className="flex items-center flex-grow">
         <Link href="/">HIGHER</Link>
       </div>

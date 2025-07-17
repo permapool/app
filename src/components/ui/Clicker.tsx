@@ -1,4 +1,7 @@
 import React from "react";
+
+import { useMinimize } from "../providers/MinimizeMenus";
+
 import { ChromeButton } from "./ChromeButton";
 import ClickerTooltip from "./ClickerTooltip";
 
@@ -22,12 +25,16 @@ const Clicker: React.FC<ClickerProps> = ({
   toggleManifesto,
   switchChannel,
   switchChannelDown,
-
   isMuted,
   toggleMute,
 }) => {
+  const { minimized } = useMinimize(); // <-- Use context
+
+  if (minimized) return null;
+
+
   return (
-    <div className="flex space-x-4 p-4 fixed bottom-10 right-[50%] translate-x-1/2 max-w-full w-full sm:right-0 sm:translate-x-0">
+    <div className="flex space-x-4 p-4 fixed bottom-0 right-[50%] translate-x-1/2 max-w-full w-full sm:right-0 sm:translate-x-0 backdrop-blur-sm bg-white/5 z-50" style={{ position: 'fixed' }}>
       {/* Channel Cluster */}
       <div className="flex flex-col space-y-4 ">
         <div className="flex flex-col gap-1">
@@ -84,7 +91,7 @@ const Clicker: React.FC<ClickerProps> = ({
         </ClickerTooltip>
         <ClickerTooltip content="Mute">
           <ChromeButton onClick={toggleMute} className="h-[50%]">
-            {isMuted ? "≃" : "≄"}
+            {isMuted ? "≄" : "≃"}
           </ChromeButton>
         </ClickerTooltip>
       </div>
