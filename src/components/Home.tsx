@@ -13,8 +13,22 @@ import Television from "./Television";
 import Clicker from "./ui/Clicker";
 
 import { useMinimize } from "./providers/MinimizeMenus";
+import { useToggle } from "./providers/ToggleContext";
+import Live from "./Live";
 
-const channels = ["/higher-horse.mp4", "/how-it-works.mp4", "/water-drop-loop.mp4", "/bench.mp4", "/runner.mp4", "higherstatuefinal-nograin.mov"];
+type VodChannel = { type: 'vod'; src: string };
+type LiveChannel = { type: 'live' };
+type Channel = VodChannel | LiveChannel;
+
+const channels: Channel[] = [
+  { type: 'vod', src: '/higher-horse.mp4' },
+  { type: 'vod', src: '/how-it-works.mp4' },
+  { type: 'live' },
+  { type: 'vod', src: '/water-drop-loop.mp4' },
+  { type: 'vod', src: '/bench.mp4' },
+  { type: 'vod', src: '/runner.mp4' },
+  { type: 'vod', src: '/higherstatuefinal-nograin.mov' },
+];
 
 export default function Home() {
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
@@ -22,22 +36,18 @@ export default function Home() {
   const [cacheBust, setCacheBust] = useState(0);
   const [frameAdded, setFrameAdded] = useState(false);
 
-  const [showPermapool, setShowPermapool] = useState(false);
-  const [showSquad, setShowSquad] = useState(false);
-  const [showProposals, setShowProposals] = useState(false);
-  const [showManifesto, setShowManifesto] = useState(false);
-  const toggleSquad = () => setShowSquad((prev) => !prev);
-  const toggleProposals = () => setShowProposals((prev) => !prev);
-  const togglePermapool = () => setShowPermapool((prev) => !prev);
-  const toggleManifesto = () => setShowManifesto((prev) => !prev);
+  const {
+    showPermapool,
+    showSquad,
+    showProposals,
+    showManifesto,
+    toggleManifesto
+  } = useToggle();
 
   const [channelIdx, setChannelIdx] = useState(0);
   const switchChannel = () => {
     setChannelIdx((idx) => {
       const newIdx = (idx + 1) % channels.length;
-      console.log(
-        `[CHANNEL UP] Switched to channel ${newIdx}: ${channels[newIdx]}`
-      );
       return newIdx;
     });
   };
@@ -45,9 +55,6 @@ export default function Home() {
   const switchChannelDown = () => {
     setChannelIdx((idx) => {
       const newIdx = (idx - 1 + channels.length) % channels.length;
-      console.log(
-        `[CHANNEL DOWN] Switched to channel ${newIdx}: ${channels[newIdx]}`
-      );
       return newIdx;
     });
   };
@@ -91,6 +98,10 @@ export default function Home() {
       addFrame();
     }
   }, [onFc, added]);
+
+  const playbackId = process.env.NEXT_PUBLIC_LIVEPEER_PLAYBACK_ID as string;
+
+  const current = channels[channelIdx];
 
   return (
     <>
@@ -177,7 +188,7 @@ export default function Home() {
                 <section>
                   <Manifesto
                   onClose={() => {
-                    setShowManifesto(false);
+                    toggleManifesto();
                     setChannelIdx(1);
                     }}
                   />
@@ -188,13 +199,21 @@ export default function Home() {
         </motion.div>
       </div>
 
-      <Television src={channels[channelIdx]} isMuted={isMuted} />
+      <Television
+        isMuted={isMuted}
+        src={current.type === 'vod' ? current.src : undefined}
+      >
+        {current.type === 'live' && playbackId ? (
+          <>
+          <div className="flex flex-col justify-center items-center h-screen md:h-auto md:block">
+          <Live playbackId={playbackId} isMuted={isMuted} />
+          </div>
+          </>
+        ) : null}
+      </Television>
+
       <Clicker
-        togglePermapool={togglePermapool}
-        toggleSquad={toggleSquad}
-        toggleProposals={toggleProposals}
-        toggleManifesto={toggleManifesto}
-        switchChannel={switchChannel}
+        switchChannelUp={switchChannel}
         switchChannelDown={switchChannelDown}
         isMuted={isMuted}
         toggleMute={toggleMute}

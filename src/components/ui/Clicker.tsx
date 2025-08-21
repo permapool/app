@@ -1,102 +1,298 @@
-import React from "react";
+"use client";
 
-import { useMinimize } from "../providers/MinimizeMenus";
-
-import { ChromeButton } from "./ChromeButton";
-import ClickerTooltip from "./ClickerTooltip";
+import React, { useEffect, useId, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 type ClickerProps = {
-  togglePermapool: () => void;
-  toggleSquad: () => void;
-  toggleProposals: () => void;
-  toggleManifesto: () => void;
-
-  switchChannel: () => void;
+  switchChannelUp: () => void;
   switchChannelDown: () => void;
-
   isMuted: boolean;
   toggleMute: () => void;
+  className?: string;
 };
 
-const Clicker: React.FC<ClickerProps> = ({
-  togglePermapool,
-  toggleSquad,
-  toggleProposals,
-  toggleManifesto,
-  switchChannel,
+type RockerPos = "center" | "up" | "down";
+
+export default function Clicker({
+  switchChannelUp,
   switchChannelDown,
   isMuted,
   toggleMute,
-}) => {
-  const { minimized } = useMinimize(); // <-- Use context
+  className,
+}: ClickerProps) {
+  const [open, setOpen] = useState(false);
+  const [focusIndex, setFocusIndex] = useState<number>(-1); // -1 = handle
+  const [rockerPos, setRockerPos] = useState<RockerPos>("center");
+  const [rockerLocked, setRockerLocked] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
 
-  if (minimized) return null;
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const handleRef = useRef<HTMLButtonElement | null>(null);
+  const actionRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const toolbarId = useId();
 
+  // Click-away
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      if (!wrapRef.current) return;
+      if (wrapRef.current.contains(e.target as Node)) return;
+      setOpen(false);
+      setFocusIndex(-1);
+      handleRef.current?.focus();
+    }
+    if (open) {
+      document.addEventListener("mousedown", onDocClick);
+      return () => document.removeEventListener("mousedown", onDocClick);
+    }
+  }, [open]);
+
+  // Focus on open/close
+  useEffect(() => {
+    if (open) {
+      setTimeout(() => {
+        setFocusIndex(0);
+        actionRefs.current[0]?.focus();
+      }, 0);
+    } else {
+      handleRef.current?.focus();
+      setFocusIndex(-1);
+    }
+  }, [open]);
+
+  // Keyboard nav within panel
+  function onActionsKeyDown(e: React.KeyboardEvent) {
+    const total = 3; // [Mute, Up, Down]
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      e.preventDefault();
+      const next = (focusIndex + 1 + total) % total;
+      setFocusIndex(next);
+      actionRefs.current[next]?.focus();
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      e.preventDefault();
+      const prev = (focusIndex - 1 + total) % total;
+      setFocusIndex(prev);
+      actionRefs.current[prev]?.focus();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      setOpen(false);
+    }
+  }
+
+  // Rocker momentary press
+  function pressRocker(dir: "up" | "down") {
+    if (rockerLocked) return;
+    setRockerLocked(true);
+    setRockerPos(dir);
+    if (dir === "up") switchChannelUp();
+    else switchChannelDown();
+    window.setTimeout(() => {
+      setRockerPos("center");
+      setRockerLocked(false);
+    }, 160);
+  }
+
+  // Drawer motion
+  const drawerVariants = {
+    closed: { x: "100%", opacity: 0.95 },
+    open: {
+      x: 0,
+      opacity: 1,
+      transition: { type: "spring", stiffness: 320, damping: 32 },
+    },
+  };
+
+  const rockerVariants = {
+    center: { y: 0 },
+    up: { y: prefersReducedMotion ? 0 : -6 },
+    down: { y: prefersReducedMotion ? 0 : 6 },
+  };
+
+  // ——— Look & feel (square, minimal) ———
+  const panelBase =
+    // sizes tuned to your mock; tweak as needed
+    "bg-white text-black border border-black w-[200px] p-3 shadow-[0_2px_8px_rgba(0,0,0,.25)]";
+
+  const handleTab =
+    "w-[20px] h-[120px] p-1 rounded-tl-lg rounded-bl-lg bg-blue text-black border border-black " +
+    "hover:none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black";
+
+  const muteBtn =
+    "inline-flex items-center justify-center w-[70px] h-[70px] bg-amber-400 border border-black border-[3px]";
+
+  const rockerShell =
+    "relative w-[70px] h-[140px] bg-neutral-300 border border-black";
+
+  const rockerCell =
+    "absolute bg-lghtgrey inset-x-0 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/50";
 
   return (
-    <div className="flex space-x-4 p-4 fixed bottom-0 right-[50%] translate-x-1/2 max-w-full w-full sm:right-0 sm:translate-x-0 backdrop-blur-sm bg-white/5 z-50" style={{ position: 'fixed' }}>
-      {/* Channel Cluster */}
-      <div className="flex flex-col space-y-4 ">
-        <div className="flex flex-col gap-1">
-          <ChromeButton onClick={switchChannel} className="h-[50%]">
-            <span className="small-font">↑↑↑</span>
-          </ChromeButton>
-          <ChromeButton onClick={switchChannelDown} className="h-[50%]">
-            <span className="flex flex-row small-font text-black">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="1em"
-                height="1em"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path d="M9.646 2.146a.5.5 0 0 1 .708 0c.531.532 1.804 2.064 2.946 3.903c1.13 1.82 2.2 4.05 2.2 5.951c0 1.844-.528 3.352-1.51 4.404C13.007 17.459 11.616 18 10 18c-1.615 0-3.006-.541-3.99-1.596C5.027 15.352 4.5 13.844 4.5 12c0-1.902 1.07-4.13 2.2-5.951c1.142-1.84 2.415-3.37 2.946-3.903Z" />
-              </svg>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="1em"
-                height="1em"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path d="M9.646 2.146a.5.5 0 0 1 .708 0c.531.532 1.804 2.064 2.946 3.903c1.13 1.82 2.2 4.05 2.2 5.951c0 1.844-.528 3.352-1.51 4.404C13.007 17.459 11.616 18 10 18c-1.615 0-3.006-.541-3.99-1.596C5.027 15.352 4.5 13.844 4.5 12c0-1.902 1.07-4.13 2.2-5.951c1.142-1.84 2.415-3.37 2.946-3.903Z" />
-              </svg>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="1em"
-                height="1em"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path d="M9.646 2.146a.5.5 0 0 1 .708 0c.531.532 1.804 2.064 2.946 3.903c1.13 1.82 2.2 4.05 2.2 5.951c0 1.844-.528 3.352-1.51 4.404C13.007 17.459 11.616 18 10 18c-1.615 0-3.006-.541-3.99-1.596C5.027 15.352 4.5 13.844 4.5 12c0-1.902 1.07-4.13 2.2-5.951c1.142-1.84 2.415-3.37 2.946-3.903Z" />
-              </svg>
-            </span>
-          </ChromeButton>
+    <AnimatePresence initial={false}>
+      <motion.div
+        ref={wrapRef}
+        key="clicker"
+        className={`fixed right-0 top-1/2 -translate-y-1/2 z-50 flex items-center ${
+          className ?? ""
+        }`}
+        initial="closed"
+        animate="open"
+        exit="closed"
+        variants={drawerVariants}
+        aria-live="polite"
+        transition={{
+          type: "spring",
+          stiffness: 500,
+          damping: 32,
+        }}
+      >
+        {/* Handle (toggle) */}
+        <div>
+          <button
+            ref={handleRef}
+            type="button"
+            className={handleTab}
+            aria-expanded={open}
+            aria-controls={toolbarId}
+            onClick={() => setOpen((v) => !v)}
+            onKeyDown={(e) => {
+              if ((e.key === "Enter" || e.key === " ") && !open) {
+                e.preventDefault();
+                setOpen(true);
+              } else if (e.key === "Escape" && open) {
+                e.preventDefault();
+                setOpen(false);
+              }
+            }}
+          >
+            <img
+              src="/icons/kebab-menu-vertical.svg"
+              alt=""
+              aria-hidden
+              className="w-6 h-4"
+            />
+          </button>
         </div>
-      </div>
 
-      {/* Action Cluster */}
-      <div className="flex flex-row space-x-4">
-        <ClickerTooltip content="Permapool">
-          <ChromeButton onClick={togglePermapool}>$$$</ChromeButton>
-        </ClickerTooltip>
-        <ClickerTooltip content="Proposals">
-          <ChromeButton onClick={toggleProposals}>¶¶¶</ChromeButton>
-        </ClickerTooltip>
-        <ClickerTooltip content="Squad">
-          <ChromeButton onClick={toggleSquad}>§§§</ChromeButton>
-        </ClickerTooltip>
-        <ClickerTooltip content="Manifesto">
-          <ChromeButton onClick={toggleManifesto}>¿¿¿</ChromeButton>
-        </ClickerTooltip>
-        <ClickerTooltip content="Mute">
-          <ChromeButton onClick={toggleMute} className="h-[50%]">
-            {isMuted ? "≄" : "≃"}
-          </ChromeButton>
-        </ClickerTooltip>
-      </div>
-    </div>
+        {/* Drawer / Panel */}
+        {open && (
+          <div
+            key="drawer"
+            role="toolbar"
+            id={toolbarId}
+            aria-label="Channel controls"
+            className="inline-block align-middle"
+            onKeyDown={onActionsKeyDown}
+          >
+            <div className={panelBase}>
+              <div className="grid grid-cols-[1fr_1fr] gap-3 w-full h-full">
+                {/* Mute */}
+                <div className="flex items-start">
+                  <button
+                    ref={(el) => {
+                      actionRefs.current[0] = el;
+                    }}
+                    type="button"
+                    className={muteBtn}
+                    aria-label={isMuted ? "Unmute audio" : "Mute audio"}
+                    aria-pressed={isMuted}
+                    onClick={toggleMute}
+                    style={{ borderRadius: "9999px" }}
+                  >
+                    <div className="relative flex items-center justify-center w-full h-full">
+                      <img
+                        src={
+                          isMuted
+                            ? "/icons/sound-off.svg"
+                            : "/icons/sound-on.svg"
+                        }
+                        alt=""
+                        aria-hidden
+                        className="w-6 h-6"
+                      />
+                    </div>
+                  </button>
+                </div>
+
+                {/* Rocker */}
+                <div className="relative">
+                  <div
+                    className={rockerShell}
+                    role="group"
+                    aria-label="Channel rocker"
+                  >
+                    <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-black/60 pointer-events-none" />
+                    <motion.div
+                      className="absolute inset-0"
+                      variants={rockerVariants}
+                      animate={rockerPos}
+                      transition={{
+                        type: "spring",
+                        stiffness: 500,
+                        damping: 32,
+                      }}
+                    />
+                    <button
+                      ref={(el) => {
+                        actionRefs.current[1] = el;
+                      }}
+                      type="button"
+                      className={`${rockerCell} top-0 h-1/2 border-b border-black`}
+                      aria-label="Channel up"
+                      onPointerDown={(e) => {
+                        e.preventDefault();
+                        pressRocker("up");
+                      }}
+                      onPointerUp={() => setRockerPos("center")}
+                      onPointerLeave={() => setRockerPos("center")}
+                      onPointerCancel={() => setRockerPos("center")}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          pressRocker("up");
+                        }
+                      }}
+                    >
+                      <img
+                        src="/icons/channel-up-1.svg"
+                        alt=""
+                        aria-hidden
+                        className="w-4 h-4"
+                      />
+                    </button>
+                    <button
+                      ref={(el) => {
+                        actionRefs.current[2] = el;
+                      }}
+                      type="button"
+                      className={`${rockerCell} bottom-0 h-1/2`}
+                      aria-label="Channel down"
+                      onPointerDown={(e) => {
+                        e.preventDefault();
+                        pressRocker("down");
+                      }}
+                      onPointerUp={() => setRockerPos("center")}
+                      onPointerLeave={() => setRockerPos("center")}
+                      onPointerCancel={() => setRockerPos("center")}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          pressRocker("down");
+                        }
+                      }}
+                    >
+                      <img
+                        src="/icons/channel-down-1.svg"
+                        alt=""
+                        aria-hidden
+                        className="w-4 h-4"
+                      />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </motion.div>
+    </AnimatePresence>
   );
-};
-
-export default Clicker;
+}

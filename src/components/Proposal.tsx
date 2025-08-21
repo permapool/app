@@ -87,7 +87,7 @@ export default function ProposalList({ proposal, isMember }: { proposal: Proposa
                 hasVoted ? 'You Voted ✅' : (
                   <span>
                     {
-                      !expired ? (
+                      !expired && !proposal.passed ? (
                         <button
                           onClick={vote}
                           disabled={voting}
