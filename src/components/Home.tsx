@@ -26,8 +26,9 @@ const channels: Channel[] = [
   { type: 'live' },
   { type: 'vod', src: '/water-drop-loop.mp4' },
   { type: 'vod', src: '/bench.mp4' },
-  { type: 'vod', src: '/runner.mp4' },
-  { type: 'vod', src: '/higherstatuefinal-nograin.mov' },
+  { type: 'vod', src: '/runner-01.mp4' },
+  { type: 'vod', src: '/flag.mp4' },
+  { type: 'vod', src: '/pegasus-billboard.mp4' },
 ];
 
 export default function Home() {
