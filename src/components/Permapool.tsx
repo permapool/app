@@ -194,7 +194,7 @@ export default function Permapool() {
 
             <p>Let’s go higher. Together.</p>
 
-            <p>Drop your tokens off at the Pool (4ever).</p>
+            <p>Drop your tokens off at the Pool (4ever). [<a href="https://basescan.org/address/0x1D00CaB0CbE32b6c3c6c5c7a08F2f45eD22089DB" target="_blank">ca</a>]</p>
           </div>
           <div className="flex flex-col">
             <div className="flex flex-row">
@@ -308,6 +308,8 @@ export default function Permapool() {
         <div>
           <div className="border-t-[1px] border-t-dotted border-t-black p-[10px] mt-[100px]">
             <h3>This Program is Made Possible by Contributors Like You</h3>
+
+            <p className="fine-print">ca: <a href="https://basescan.org/address/0x1D00CaB0CbE32b6c3c6c5c7a08F2f45eD22089DB" target="_blank">0x1D00CaB0CbE32b6c3c6c5c7a08F2f45eD22089DB</a></p>
             <p className="fine-print">
               higher.zip runs on the energy, attention, and contributions of our
               community.

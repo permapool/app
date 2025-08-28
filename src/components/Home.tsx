@@ -24,7 +24,6 @@ const channels: Channel[] = [
   { type: 'live' },
   { type: 'vod', src: '/how-it-works.mp4' },
   { type: 'vod', src: '/higher-horse.mp4' },
-  { type: 'vod', src: '/water-drop-loop.mp4' },
   { type: 'vod', src: '/bench.mp4' },
   { type: 'vod', src: '/runner-01.mp4' },
   { type: 'vod', src: '/flag.mp4' },
