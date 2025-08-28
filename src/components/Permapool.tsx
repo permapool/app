@@ -175,13 +175,27 @@ export default function Permapool() {
       <h2>Support the Network</h2>
       <div>
         <div>
-          <p className="subtitle">Become a higher.zip accomplice</p>
-          <div className="flex flex-row justify-between border-t-[1px] border-t-dotted border-t-[#fffff8]">
-            <p>Donate</p>
-            <p>Total Donations: {totalDonations}</p>
+          
+          <div className="flex flex-row justify-between bg-[var(--amber)] p-[10px]">
+          <p className="subtitle">Donate to support HIGHER.ZIP</p>
+            <p className="fine-print">Total Donations: {totalDonations}</p>
           </div>
-          <p>higher.zip runs on bandwidth and community coin.</p>
-          <p>Tap in and help us keep the broadcast going.</p>
+          <div>
+            <p>
+              This is the Permapool — a permanently locked LP of HIGHER and ETH
+              that fuels contributors via organic market activity.
+            </p>
+
+            <p>
+              Every donation deepens liquidity and directly supports higher.zip.
+            </p>
+
+            <p>Let’s build what couldn’t exist anywhere else.</p>
+
+            <p>Let’s go higher. Together.</p>
+
+            <p>Drop your tokens off at the Pool (4ever).</p>
+          </div>
           <div className="flex flex-col">
             <div className="flex flex-row">
               <div className="flex items-center mr-2">ETH</div>

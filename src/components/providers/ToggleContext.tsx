@@ -21,6 +21,34 @@ export const ToggleProvider = ({ children }: { children: ReactNode }) => {
   const [showProposals, setShowProposals] = useState(false);
   const [showManifesto, setShowManifesto] = useState(false);
 
+  const togglePermapool = () => {
+    setShowPermapool(p => !p);
+    setShowSquad(false);
+    setShowProposals(false);
+    setShowManifesto(false);
+  };
+
+  const toggleSquad = () => {
+    setShowSquad(p => !p);
+    setShowPermapool(false);
+    setShowProposals(false);
+    setShowManifesto(false);
+  };
+
+  const toggleProposals = () => {
+    setShowProposals(p => !p);
+    setShowPermapool(false);
+    setShowSquad(false);
+    setShowManifesto(false);
+  };
+
+  const toggleManifesto = () => {
+    setShowManifesto(p => !p);
+    setShowPermapool(false);
+    setShowSquad(false);
+    setShowProposals(false);
+  };
+
   return (
     <ToggleContext.Provider
       value={{
@@ -28,10 +56,10 @@ export const ToggleProvider = ({ children }: { children: ReactNode }) => {
         showSquad,
         showProposals,
         showManifesto,
-        togglePermapool: () => setShowPermapool((p) => !p),
-        toggleSquad: () => setShowSquad((p) => !p),
-        toggleProposals: () => setShowProposals((p) => !p),
-        toggleManifesto: () => setShowManifesto((p) => !p),
+        togglePermapool,
+        toggleSquad,
+        toggleProposals,
+        toggleManifesto,
       }}
     >
       {children}

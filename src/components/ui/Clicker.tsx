@@ -117,7 +117,7 @@ export default function Clicker({
     "hover:none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black";
 
   const muteBtn =
-    "inline-flex items-center justify-center w-[70px] h-[70px] bg-amber-400 border border-black border-[3px]";
+    "inline-flex items-center justify-center w-[70px] h-[70px] bg-[var(--amber)] border border-black border-[3px]";
 
   const rockerShell =
     "relative w-[70px] h-[140px] bg-neutral-300 border border-black";
@@ -164,10 +164,10 @@ export default function Clicker({
             }}
           >
             <img
-              src="/icons/kebab-menu-vertical.svg"
+              src="/icons/clicker.svg"
               alt=""
               aria-hidden
-              className="w-6 h-4"
+              className="w-6 h-20"
             />
           </button>
         </div>
@@ -235,7 +235,7 @@ export default function Clicker({
                         actionRefs.current[1] = el;
                       }}
                       type="button"
-                      className={`${rockerCell} top-0 h-1/2 border-b border-black`}
+                      className={`${rockerCell} top-0 h-1/2 border-b border-black p-2`}
                       aria-label="Channel up"
                       onPointerDown={(e) => {
                         e.preventDefault();
@@ -252,10 +252,10 @@ export default function Clicker({
                       }}
                     >
                       <img
-                        src="/icons/channel-up-1.svg"
+                        src="/icons/ch-up.svg"
                         alt=""
                         aria-hidden
-                        className="w-4 h-4"
+                        className="w-20 h-20"
                       />
                     </button>
                     <button
@@ -263,7 +263,7 @@ export default function Clicker({
                         actionRefs.current[2] = el;
                       }}
                       type="button"
-                      className={`${rockerCell} bottom-0 h-1/2`}
+                      className={`${rockerCell} bottom-0 h-1/2 p-2`}
                       aria-label="Channel down"
                       onPointerDown={(e) => {
                         e.preventDefault();
@@ -280,10 +280,10 @@ export default function Clicker({
                       }}
                     >
                       <img
-                        src="/icons/channel-down-1.svg"
+                        src="/icons/ch-down.svg"
                         alt=""
                         aria-hidden
-                        className="w-4 h-4"
+                        className="w-20 h-20"
                       />
                     </button>
                   </div>
