@@ -43,7 +43,7 @@ export default function NextOnHigherZipPage() {
       <h2>Broadcasting Blueprint</h2>
 
         <p className="mt-2">
-          Below is our programming slate (fka. roadmap). This is what’s in the writers’ room, what’s on the
+          Below is our programming slate. This is what’s in the writers’ room, what’s on the
           production floor, and what’s going live.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
