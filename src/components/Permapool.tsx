@@ -14,6 +14,7 @@ import { permapoolAbi, permapoolAddress } from "~/constants/abi-permapool";
 import { switchChain } from "@wagmi/core";
 
 import Tooltip from "./ui/Tooltip";
+import { DonationReceipt, DonationReceiptProps } from "./ui/DonationReceipt";
 
 import { config } from "~/components/providers/WagmiProvider";
 export default function Permapool() {
@@ -23,6 +24,7 @@ export default function Permapool() {
   const [donating, setDonating] = useState(false);
   const [claiming, setClaiming] = useState(false);
   const [cacheBust, setCacheBust] = useState(0);
+  const [receipt, setReceipt] = useState<DonationReceiptProps | null>(null);
 
   const { data: tokenIdRes } = useReadContract({
     abi: permapoolAbi,
@@ -135,6 +137,19 @@ export default function Permapool() {
       // @ts-expect-error: TS2339
       setTimeout(() => window.alert(writeError.shortMessage), 1);
     } else if (isConfirmed) {
+      if (donating) {
+        setReceipt({
+          txHash: writeData as string,
+          network: "base",
+          donorAddress: account.address,
+          projectAddress: permapoolAddress,
+          amount: Number(value),
+          tokenSymbol: "ETH",
+          date: new Date(),
+          donorNumber: Number(totalDonations) + 1,
+        });
+        setValue("");
+      }
       setClaiming(false);
       setDonating(false);
       setCacheBust(cacheBust + 1);
@@ -170,14 +185,36 @@ export default function Permapool() {
     });
   };
 
+/*   const testReceipt = () => {
+    setReceipt({
+      txHash:
+        "0xa0f9775261854b155a6859f66adbf41791e78a27365cae7361a6cfc5d8550c27",
+      network: "base",
+      donorAddress: "0xb97A251dF2672b0e252b28a96857A8ACE9929CCc",
+      projectAddress: permapoolAddress,
+      amount: 0.123,
+      tokenSymbol: "ETH",
+      date: new Date(),
+      donorNumber: Number(totalDonations) + 1,
+    });
+    setValue("");
+  }; */
+
   return (
     <div className="section-border mx-auto">
+      {receipt && (
+        <div
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center animate-in fade-in-0 duration-300"
+          onClick={() => setReceipt(null)}
+        >
+          <DonationReceipt {...receipt} onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
       <h2>Support the Network</h2>
       <div>
         <div>
-          
           <div className="flex flex-row justify-between bg-[var(--amber)] p-[10px]">
-          <p className="subtitle">Donate to support HIGHER.ZIP</p>
+            <p className="subtitle">Donate to support HIGHER.ZIP</p>
             <p className="fine-print">Total Donations: {totalDonations}</p>
           </div>
           <div>
@@ -194,7 +231,16 @@ export default function Permapool() {
 
             <p>Let’s go higher. Together.</p>
 
-            <p>Drop your tokens off at the Pool (4ever). [<a href="https://basescan.org/address/0x1D00CaB0CbE32b6c3c6c5c7a08F2f45eD22089DB" target="_blank">ca</a>]</p>
+            <p>
+              Drop your tokens off at the Pool (4ever). [
+              <a
+                href="https://basescan.org/address/0x1D00CaB0CbE32b6c3c6c5c7a08F2f45eD22089DB"
+                target="_blank"
+              >
+                ca
+              </a>
+              ]
+            </p>
           </div>
           <div className="flex flex-col">
             <div className="flex flex-row">
@@ -230,6 +276,9 @@ export default function Permapool() {
                   5 eth
                 </button>
               </div>
+              {/* <button onClick={testReceipt} className="w-full mt-2">
+                Test Receipt
+              </button> */}
             </div>
           </div>
           <br />
@@ -308,14 +357,20 @@ export default function Permapool() {
         <div>
           <div className="border-t-[1px] border-t-dotted border-t-black p-[10px] mt-[100px]">
             <h3>This Program is Made Possible by Contributors Like You</h3>
-
-            <p className="fine-print">ca: <a href="https://basescan.org/address/0x1D00CaB0CbE32b6c3c6c5c7a08F2f45eD22089DB" target="_blank">0x1D00CaB0CbE32b6c3c6c5c7a08F2f45eD22089DB</a></p>
             <p className="fine-print">
               higher.zip runs on the energy, attention, and contributions of our
               community.
             </p>
             <p className="fine-print">Powered by the Pool. Driven by You.</p>
-
+            <p className="fine-print">
+              ca:{" "}
+              <a
+                href="https://basescan.org/address/0x1D00CaB0CbE32b6c3c6c5c7a08F2f45eD22089DB"
+                target="_blank"
+              >
+                0x1D00CaB0CbE32b6c3c6c5c7a08F2f45eD22089DB
+              </a>
+            </p>
             <p className="fine-print">
               <strong>Every contribution keeps the signal alive.</strong>
             </p>

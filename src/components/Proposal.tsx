@@ -14,6 +14,25 @@ import { governanceAbi, governanceAddress } from "~/constants/abi-governance";
 import { ProposalData, getNullAddress } from "~/lib/data";
 import { config } from '~/components/providers/WagmiProvider';
 
+const statusStyles: Record<string, string> = {
+  "You Voted":
+    "bg-violet-100 text-violet-800 border border-violet-200",
+  "Passed":
+    "bg-emerald-100 text-emerald-800 border border-emerald-200",
+  "Expired":
+    "bg-rose-100 text-rose-800 border border-rose-200",
+};
+
+function StatusBadge({ status }: { status: string }) {
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${statusStyles[status]}`}
+    >
+      {status}
+    </span>
+  );
+}
+
 export default function ProposalList({ proposal, isMember }: { proposal: ProposalData, isMember: boolean }) {
   const account = useAccount();
 
@@ -74,17 +93,17 @@ export default function ProposalList({ proposal, isMember }: { proposal: Proposa
           </div>
         )
       }
-      <div className="small-font">
+      <div className="fine-print">
         {
-          proposal.passed ? 'Passed ✅' : (
-            <span>{expired ? 'Expired' : `Expires in ${getDuration(Number(proposal.expiration - now))}`}</span>
+          proposal.passed ? <StatusBadge status="Passed" /> : (
+            expired ? <StatusBadge status="Expired" /> : `Expires in ${getDuration(Number(proposal.expiration - now))}`
           )
         }
         {
           isMember ? (
             <div>
               {
-                hasVoted ? 'You Voted ✅' : (
+                hasVoted ? <StatusBadge status="You Voted" /> : (
                   <span>
                     {
                       !expired && !proposal.passed ? (
@@ -102,6 +121,7 @@ export default function ProposalList({ proposal, isMember }: { proposal: Proposa
             </div>
           ) : null
         }
+        <hr />
       </div>
     </div>
   )
