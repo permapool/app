@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 import sdk, { Context } from "@farcaster/frame-sdk";
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,6 +15,8 @@ import Clicker from "./ui/Clicker";
 import { useMinimize } from "./providers/MinimizeMenus";
 import { useToggle } from "./providers/ToggleContext";
 import Live from "./Live";
+
+import Toaster, { ToasterRef } from './ui/Toast';
 
 type VodChannel = { type: "vod"; src: string };
 type LiveChannel = { type: "live" };
@@ -103,6 +105,21 @@ export default function Home() {
 
   const current = channels[channelIdx];
 
+  const toasterRef = useRef<ToasterRef>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      toasterRef.current?.show({
+        title: "Clicker Available",
+        message: "Use the clicker to change channels and unmute the video feed.",
+        variant: "default",
+        position: "top-right",
+      });
+    }, 4000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <>
       <div
@@ -119,6 +136,8 @@ export default function Home() {
         onClick={() => setMinimized((prev) => !prev)}
         aria-label="Minimize UI"
       />
+
+      <Toaster ref={toasterRef} />
 
       <div className="max-w-[1100px] mx-auto px-4 pb-20 pt-[7%]">
         <div className="mx-auto py-4">
