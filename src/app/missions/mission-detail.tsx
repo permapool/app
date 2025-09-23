@@ -3,10 +3,17 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-export default function MissionDetail({ mission }: { mission: any }) {
+interface Mission {
+  title: string;
+  mission: string;
+  rewards: string;
+  requirements: string[];
+  deadline: string;
+}
+
+export default function MissionDetail({ mission }: { mission: Mission }) {
   const router = useRouter();
 
-  // Escape key closes modal
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") router.push("/missions");
@@ -36,7 +43,7 @@ export default function MissionDetail({ mission }: { mission: any }) {
             <div>
               <h3>Requirements</h3>
               <ul className="list-disc ml-6 mt-1 space-y-1 list-['-']">
-                {mission.requirements.map((req: string, i: number) => (
+                {mission.requirements.map((req, i) => (
                   <li key={i}>{req}</li>
                 ))}
               </ul>
