@@ -35,6 +35,7 @@ export default function Television({ src, isMuted, children }: TelevisionProps) 
         </div>
       ) : (
         <video
+          id="jumbotron"
           ref={videoRef}
           src={src}
           autoPlay

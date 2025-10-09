@@ -210,6 +210,7 @@ export default function Clicker({
                       />
                     </div>
                   </button>
+                  <div onClick={() => document?.getElementById('jumbotron')?.requestPictureInPicture()}>📺</div>
                 </div>
 
                 {/* Rocker */}
