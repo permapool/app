@@ -19,7 +19,7 @@ export default function Live({ playbackId, isMuted }: LiveProps) {
   return (
     <Player.Root src={src} autoPlay>
       <Player.Container className="pointer-events-none w-full h-full">
-        <Player.Video muted={isMuted} className="pointer-events-none w-full h-full object-contain" />
+        <Player.Video id="jumbotron" muted={isMuted} className="pointer-events-none w-full h-full object-contain" />
       </Player.Container>
     </Player.Root>
   );
