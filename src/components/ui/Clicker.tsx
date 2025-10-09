@@ -210,7 +210,18 @@ export default function Clicker({
                       />
                     </div>
                   </button>
-                  <div onClick={() => document?.getElementById('jumbotron')?.requestPictureInPicture()}>📺</div>
+                  <div
+                    onClick={() => {
+                      const video = document.getElementById('jumbotron') as HTMLVideoElement | null;
+                      if (video && typeof video.requestPictureInPicture === 'function') {
+                        video.requestPictureInPicture().catch(err => {
+                          console.error('Failed to enter Picture-in-Picture mode:', err);
+                        });
+                      }
+                    }}
+                  >
+                    📺
+                  </div>
                 </div>
 
                 {/* Rocker */}
