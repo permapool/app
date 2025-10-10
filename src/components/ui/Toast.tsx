@@ -27,7 +27,6 @@ interface ToasterProps {
   onDismiss?: () => void;
 }
 
-// extend props to include id internally
 interface ToastItem extends ToasterProps {
   id: number;
 }

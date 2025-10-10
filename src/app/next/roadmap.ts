@@ -71,7 +71,7 @@ export const roadmap: RoadmapPhase[] = [
       {
         date: "AUG 30 2025",
         description: "Toast notifications",
-        status: "Backlog",
+        status: "Now Airing",
       },
       {
         date: "AUG 30 2025",
@@ -125,7 +125,7 @@ export const roadmap: RoadmapPhase[] = [
         date: "AUG 30 2025",
         description:
           'HZ MISSIONS page that shows all active higher rewards opportunities',
-        status: "Backlog",
+        status: "Now Airing",
       },
       {
         date: "AUG 30 2025",

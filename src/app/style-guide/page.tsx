@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import BrandMenu from "../../components/BrandMenu";
 
 export const metadata: Metadata = {
   title: "Style Guide",
@@ -99,9 +100,16 @@ export default function StyleGuidePage() {
 
       <section className="mt-4">
         <h3>Logo</h3>
-        <div className="flex items-center border p-10">
-          <img src="/logo-full.svg" alt="HIGHER.ZIP Logo" />
-        </div>
+        <BrandMenu>
+          <div className="flex items-center border p-10 mb-4">
+            <img src="/logo-dual.svg" alt="HIGHER.ZIP Logo" />
+          </div>
+        </BrandMenu>
+        <BrandMenu>
+          <div className="flex items-center border p-10">
+            <img src="/logo-full.svg" alt="HIGHER.ZIP Logo" />
+          </div>
+        </BrandMenu>
         <p>
           This is the HIGHER.ZIP wordmark.The logo is the centerpiece of our
           identity. It is bold, precise, and instantly recognizable.

@@ -117,7 +117,10 @@ export default function Clicker({
     "hover:none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black";
 
   const muteBtn =
-    "inline-flex items-center justify-center w-[70px] h-[70px] bg-[var(--amber)] border border-black border-[3px]";
+    "inline-flex items-center justify-center w-[70px] h-[70px] bg-[var(--amber)] border border-black border-[3px] rounded-full";
+
+  const hdBtn =
+    "inline-flex items-center justify-center w-[50px] h-[50px] bg-red border border-black border-[3px] rounded-full";
 
   const rockerShell =
     "relative w-[70px] h-[140px] bg-neutral-300 border border-black";
@@ -172,7 +175,7 @@ export default function Clicker({
           </button>
         </div>
 
-        {/* Drawer / Panel */}
+        {/* Drawer */}
         {open && (
           <div
             key="drawer"
@@ -184,44 +187,57 @@ export default function Clicker({
           >
             <div className={panelBase}>
               <div className="grid grid-cols-[1fr_1fr] gap-3 w-full h-full">
-                {/* Mute */}
-                <div className="flex items-start">
+                <div className="flex flex-col items-start gap-3">
+                  {/* Mute */}
                   <button
                     ref={(el) => {
                       actionRefs.current[0] = el;
                     }}
                     type="button"
-                    className={muteBtn}
+                    className={`${muteBtn} relative flex items-center justify-center`}
                     aria-label={isMuted ? "Unmute audio" : "Mute audio"}
                     aria-pressed={isMuted}
                     onClick={toggleMute}
-                    style={{ borderRadius: "9999px" }}
                   >
-                    <div className="relative flex items-center justify-center w-full h-full">
-                      <img
-                        src={
-                          isMuted
-                            ? "/icons/sound-off.svg"
-                            : "/icons/sound-on.svg"
-                        }
-                        alt=""
-                        aria-hidden
-                        className="w-6 h-6"
-                      />
-                    </div>
+                    <img
+                      src={
+                        isMuted ? "/icons/sound-off.svg" : "/icons/sound-on.svg"
+                      }
+                      alt=""
+                      aria-hidden
+                      className="w-6 h-6"
+                    />
                   </button>
-                  <div
+
+                  {/* PIP */}
+                  <button
+                    type="button"
+                    className={`${hdBtn} relative flex items-center justify-center`}
+                    aria-label="Enter Picture-in-Picture mode"
                     onClick={() => {
-                      const video = document.getElementById('jumbotron') as HTMLVideoElement | null;
-                      if (video && typeof video.requestPictureInPicture === 'function') {
-                        video.requestPictureInPicture().catch(err => {
-                          console.error('Failed to enter Picture-in-Picture mode:', err);
+                      const video = document.getElementById(
+                        "jumbotron"
+                      ) as HTMLVideoElement | null;
+                      if (
+                        video &&
+                        typeof video.requestPictureInPicture === "function"
+                      ) {
+                        video.requestPictureInPicture().catch((err) => {
+                          console.error(
+                            "Failed to enter Picture-in-Picture mode:",
+                            err
+                          );
                         });
                       }
                     }}
                   >
-                    📺
-                  </div>
+                    <img
+                      src="/icons/picture-in-picture.svg"
+                      alt=""
+                      aria-hidden
+                      className="w-6 h-6 min-w-[1.5rem] min-h-[1.5rem]"
+                    />
+                  </button>
                 </div>
 
                 {/* Rocker */}
