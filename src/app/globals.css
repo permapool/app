@@ -11,12 +11,14 @@
   --lghtgrey: rgb(230, 230, 230);
   --green: #018A08;
   --amber: #FFA500;
+
+  --font: 'Geist', 'Helvetica Neue', Helvetica, Arial, 'Lucida Grande', sans-serif;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: 'Geist', 'Helvetica Neue', Helvetica, Arial, 'Lucida Grande', sans-serif;
+  font-family: var(--font);
   font-size: 1.5em;
   counter-reset: sidenote-counter;
 }
@@ -45,7 +47,7 @@ body {
 }
 
 button {
-  font-family: 'Geist', 'Helvetica Neue', Helvetica, Arial, 'Lucida Grande', sans-serif;
+  font-family: var(--font);
   color: var(--background);
 }
 
@@ -187,6 +189,34 @@ a {
 a:hover {
   cursor: pointer;
   scale: 1.05;
+}
+
+/* radial menu defaults */
+.__rrm-menu g { cursor: pointer; }
+
+/* slice background (the wedge) */
+.__rrm-menu g .__rrm-base {
+  transition: fill .18s ease, stroke .18s ease;
+}
+
+/* label inside foreignObject */
+.__rrm-menu g .__rrm-content {
+  color: var(--foreground);               
+  font-size: 14px;
+  font-family: var(--font);
+  font-weight: 500;
+  display: flex; align-items: center; justify-content: center;
+  transition: color .18s ease, transform .18s ease;
+}
+
+/* HOVER STATES */
+.__rrm-menu g:hover .__rrm-base {
+  fill: var(--amber);   
+}
+
+.__rrm-menu g:hover .__rrm-content {
+  color: var(--foreground);                      
+  transform: translateY(-1px);
 }
 
 @media(max-width: 600px) {

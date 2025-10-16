@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { StyledConnectKitButton } from "./ui/StyledConnectKitButton";
@@ -19,10 +19,42 @@ export default function Navigation() {
   const pathname = usePathname();
   const isHome = pathname === "/";
 
+  // 🕓 fade visibility logic
+  const [visible, setVisible] = useState(true);
+  const fadeTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  // fade-out delay (ms)
+  const FADE_DELAY = 4000;
+
+  const resetFadeTimer = () => {
+    setVisible(true);
+    if (fadeTimeoutRef.current) clearTimeout(fadeTimeoutRef.current);
+    fadeTimeoutRef.current = setTimeout(() => setVisible(false), FADE_DELAY);
+  };
+
+  useEffect(() => {
+    // start timer
+    resetFadeTimer();
+
+    // show again on mouse move
+    const handleMouseMove = () => resetFadeTimer();
+
+    window.addEventListener("mousemove", handleMouseMove);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      if (fadeTimeoutRef.current) clearTimeout(fadeTimeoutRef.current);
+    };
+  }, []);
+
   if (minimized) return null;
 
   return (
-    <div className="fixed z-50 m-3 w-[98%] bg-white shadow-solid border border-[1px] border-black">
+    <div
+      className={`fixed z-50 m-3 w-[98%] bg-white shadow-solid border border-[1px] border-black transition-opacity duration-700 ${
+        visible ? "opacity-100" : "opacity-0"
+      }`}
+    >
       <div className="flex items-center justify-between px-2">
         <BrandMenu>
           <div className="flex items-center flex-grow">

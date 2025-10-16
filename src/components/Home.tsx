@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 
 import sdk, { Context } from "@farcaster/frame-sdk";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,13 +10,13 @@ import Permapool from "./Permapool";
 import Manifesto from "./Manifesto";
 
 import Television from "./Television";
-import Clicker from "./ui/Clicker";
+import NewClicker from "./ui/NewClicker";
 
 import { useMinimize } from "./providers/MinimizeMenus";
 import { useToggle } from "./providers/ToggleContext";
 import Live from "./Live";
 
-import Toaster, { ToasterRef } from './ui/Toast';
+import Toaster, { ToasterRef } from "./ui/Toast";
 
 type VodChannel = { type: "vod"; src: string };
 type LiveChannel = { type: "live" };
@@ -35,7 +35,6 @@ const channels: Channel[] = [
 export default function Home() {
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [context, setContext] = useState<Context.FrameContext>();
-  const [cacheBust, setCacheBust] = useState(0);
   const [frameAdded, setFrameAdded] = useState(false);
 
   const {
@@ -48,17 +47,11 @@ export default function Home() {
 
   const [channelIdx, setChannelIdx] = useState(0);
   const switchChannel = () => {
-    setChannelIdx((idx) => {
-      const newIdx = (idx + 1) % channels.length;
-      return newIdx;
-    });
+    setChannelIdx((idx) => (idx + 1) % channels.length);
   };
 
   const switchChannelDown = () => {
-    setChannelIdx((idx) => {
-      const newIdx = (idx - 1 + channels.length) % channels.length;
-      return newIdx;
-    });
+    setChannelIdx((idx) => (idx - 1 + channels.length) % channels.length);
   };
 
   const added = frameAdded || context?.client?.added || false;
@@ -71,6 +64,7 @@ export default function Home() {
       setContext(context);
       sdk.actions.ready({});
     };
+
     if (sdk && !isSDKLoaded) {
       setIsSDKLoaded(true);
       load();
@@ -80,38 +74,37 @@ export default function Home() {
     }
   }, [isSDKLoaded]);
 
-  const addFrame = async () => {
+  const addFrame = useCallback(async () => {
     try {
       setFrameAdded(true);
       await sdk.actions.addFrame();
-      setCacheBust(cacheBust + 1);
     } catch (e) {
       console.log(e);
     }
-  };
+  }, []);
 
   const [isMuted, setIsMuted] = useState(true);
   const toggleMute = () => setIsMuted((m) => !m);
-  const { setMinimized } = useMinimize();
+
+  useMinimize();
 
   const onFc = !!context;
   useEffect(() => {
     if (onFc && !added) {
       addFrame();
     }
-  }, [onFc, added]);
+  }, [onFc, added, addFrame]);
 
   const playbackId = process.env.NEXT_PUBLIC_LIVEPEER_PLAYBACK_ID as string;
-
   const current = channels[channelIdx];
-
   const toasterRef = useRef<ToasterRef>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       toasterRef.current?.show({
         title: "Clicker Available",
-        message: "Use the clicker to change channels and unmute the video feed.",
+        message:
+          "Use the clicker to change channels and unmute the video feed.",
         variant: "default",
         position: "top-right",
       });
@@ -122,21 +115,6 @@ export default function Home() {
 
   return (
     <>
-      <div
-        style={{
-          position: "fixed",
-          top: "10vh",
-          left: 0,
-          width: "100vw",
-          height: "70vh",
-          zIndex: 1,
-          cursor: "pointer",
-          background: "transparent",
-        }}
-        onClick={() => setMinimized((prev) => !prev)}
-        aria-label="Minimize UI"
-      />
-
       <Toaster ref={toasterRef} />
 
       <div className="max-w-[1100px] mx-auto px-4 pb-20 pt-[7%]">
@@ -159,6 +137,7 @@ export default function Home() {
                 </motion.div>
               )}
             </AnimatePresence>
+
             <AnimatePresence>
               {showSquad && (
                 <motion.div
@@ -176,6 +155,7 @@ export default function Home() {
                 </motion.div>
               )}
             </AnimatePresence>
+
             <AnimatePresence>
               {showProposals && (
                 <motion.div
@@ -193,6 +173,7 @@ export default function Home() {
                 </motion.div>
               )}
             </AnimatePresence>
+
             <AnimatePresence>
               {showManifesto && (
                 <motion.div
@@ -223,15 +204,13 @@ export default function Home() {
           src={current.type === "vod" ? current.src : undefined}
         >
           {current.type === "live" && playbackId ? (
-            <>
-              <div className="flex flex-col justify-center items-center h-screen md:h-auto md:block">
-                <Live playbackId={playbackId} isMuted={isMuted} />
-              </div>
-            </>
+            <div className="flex flex-col justify-center items-center h-screen md:h-auto md:block">
+              <Live playbackId={playbackId} isMuted={isMuted} />
+            </div>
           ) : null}
         </Television>
 
-        <Clicker
+        <NewClicker
           switchChannelUp={switchChannel}
           switchChannelDown={switchChannelDown}
           isMuted={isMuted}

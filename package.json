@@ -16,6 +16,7 @@
     "@farcaster/frame-sdk": "^0.0.31",
     "@farcaster/frame-wagmi-connector": "^0.0.19",
     "@livepeer/react": "^4.3.6",
+    "@spaceymonk/react-radial-menu": "^2.1.0",
     "@tanstack/react-query": "^5.61.0",
     "axios": "^1.7.9",
     "connectkit": "^1.8.2",
