@@ -2,7 +2,7 @@ import { getAppUrl } from "~/lib/data";
 
 export async function GET() {
   const appUrl = getAppUrl();
-  const accountAssociation = JSON.parse(process.env.WELLKNOWN_JSON);
+  const accountAssociation = JSON.parse(process.env.WELLKNOWN_JSON || '{}');
 
   const config = {
     accountAssociation,

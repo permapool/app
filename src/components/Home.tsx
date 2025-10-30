@@ -36,6 +36,7 @@ export default function Home() {
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [context, setContext] = useState<Context.FrameContext>();
   const [frameAdded, setFrameAdded] = useState(false);
+  const [showChat, setShowChat] = useState(false);
 
   const {
     showPermapool,
@@ -209,7 +210,36 @@ export default function Home() {
             </div>
           ) : null}
         </Television>
-
+        {
+          showChat ? (
+            <iframe
+              src="https://basetrenches.com/room/0x0578d8A44db98B23BF096A382e016e29a5Ce0ffe"
+              style={{
+                border: '1px solid #666',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                position: 'fixed',
+                bottom: '3.5em',
+                left: '1em',
+                width: '280px',
+                maxWidth: '90%',
+                height: '350px',
+                maxHeight: '80%'
+              }}
+            />
+          ) : null
+        }
+        <button
+          style={{
+            position: 'fixed',
+            bottom: '1em',
+            left: '1em'
+          }}
+          onClick={() => setShowChat(!showChat)}
+          className="text-white w-14 aspect-square rounded-full flex items-center justify-center text-lg font-semibold bg-green-600 hover:bg-[var(--amber)] transition-all duration-100 shadow-md select-none touch-manipulation"
+        >
+          {showChat ? '✕' : '🗯️'}
+        </button>
         <NewClicker
           switchChannelUp={switchChannel}
           switchChannelDown={switchChannelDown}
