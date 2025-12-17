@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { Menu, MenuItem } from "@spaceymonk/react-radial-menu";
 import { motion, PanInfo } from "framer-motion";
+import Image from "next/image";
 
 export type ClickerProps = {
   switchChannelUp: () => void;
@@ -139,10 +140,7 @@ export default function NewClicker({
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (
-          typeof parsed.x === "number" &&
-          typeof parsed.y === "number"
-        ) {
+        if (typeof parsed.x === "number" && typeof parsed.y === "number") {
           setPosition(parsed);
         }
       } catch (e) {
@@ -227,7 +225,12 @@ export default function NewClicker({
                 ◲
               </MenuItem>
               <MenuItem onItemClick={handleItemClick} data="mute">
-                {isMuted ? "⨂" : "⨁"}
+                <Image
+                  src={isMuted ? "/icons/sound-off.svg" : "/icons/sound-on.svg"}
+                  alt={isMuted ? "Unmute" : "Mute"}
+                  width={15}
+                  height={15}
+                />
               </MenuItem>
               <MenuItem onItemClick={handleItemClick} data="ch+">
                 CH +

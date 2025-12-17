@@ -1,6 +1,6 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import { Address } from "viem";
-import { useAccount, useReadContract } from 'wagmi';
+import { useAccount, useReadContract } from "wagmi";
 import { governanceAbi, governanceAddress } from "~/constants/abi-governance";
 import { ProposalData } from "~/lib/data";
 
@@ -26,29 +26,30 @@ export default function ProposalList() {
   const isMember = (isMemberRes || false) as boolean;
   return (
     <div className="section-border">
-      <div className="flex" style={{ alignItems: 'center' }}>
+      <div className="flex" style={{ alignItems: "center" }}>
         <div className="flex-grow">
           <h2>Proposals</h2>
         </div>
         <div className="flex-shrink">
-          {
-            showCreateProposal ? (
-              <button onClick={() => setShowCreateProposal(false)}>cancel</button>
-            ) : (
-              <button onClick={() => setShowCreateProposal(true)}>create</button>
-            )
-          }
+          {showCreateProposal ? (
+            <button onClick={() => setShowCreateProposal(false)}>cancel</button>
+          ) : (
+            <button onClick={() => setShowCreateProposal(true)}>create</button>
+          )}
         </div>
       </div>
-      {
-        showCreateProposal ? (
-          <CreateProposal />
-        ) : null
-      }
+      {showCreateProposal ? <CreateProposal /> : null}
       <br />
-      {
-        proposals.map(p => <Proposal key={`prop-${p.expiration}`} proposal={p} isMember={isMember} />)
-      }
+      {proposals
+        .slice()
+        .reverse()
+        .map((p) => (
+          <Proposal
+            key={`prop-${p.expiration}`}
+            proposal={p}
+            isMember={isMember}
+          />
+        ))}
     </div>
-  )
+  );
 }

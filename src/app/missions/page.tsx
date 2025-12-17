@@ -10,8 +10,20 @@ const missions = [
   },
   {
     id: "hz002",
-    title: "HZ002 · ??????????",
-    summary: "??????????????????????????????",
+    title: "HZ002 · Higher Forever",
+    summary: "Create a looping video.",
+    status: "Published",
+  },
+  {
+    id: "hz003",
+    title: "HZ003 · Higher Amplified",
+    summary: "Create an audio piece.",
+    status: "Published",
+  },
+  {
+    id: "hz004",
+    title: "HZ004 · ???????????????",
+    summary: "??????????????????????",
     status: "Incoming",
   },
 ];
@@ -55,7 +67,7 @@ export default function MissionsPage() {
     <main className="mx-auto max-w-6xl px-5 py-12">
       <header className="mb-10">
         <h1>Missions</h1>
-        <p className="mt-2 text-foreground max-w-2xl">
+        <p className="mt-2 text-foreground max-w-3xl">
           Broadcast calls for bumpers, intros, and IDs. Short missions, open to all.
         </p>
       </header>

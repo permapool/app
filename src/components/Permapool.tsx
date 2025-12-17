@@ -13,6 +13,8 @@ import { governanceAbi, governanceAddress } from "~/constants/abi-governance";
 import { permapoolAbi, permapoolAddress } from "~/constants/abi-permapool";
 import { switchChain } from "@wagmi/core";
 
+import { withCommas, withCommasInt } from "~/lib/commas";
+
 import Tooltip from "./ui/Tooltip";
 import { DonationReceipt, DonationReceiptProps } from "./ui/DonationReceipt";
 
@@ -185,7 +187,7 @@ export default function Permapool() {
     });
   };
 
-/*   const testReceipt = () => {
+  /*   const testReceipt = () => {
     setReceipt({
       txHash:
         "0xa0f9775261854b155a6859f66adbf41791e78a27365cae7361a6cfc5d8550c27",
@@ -215,7 +217,9 @@ export default function Permapool() {
         <div>
           <div className="flex flex-row justify-between bg-[var(--amber)] p-[10px]">
             <p className="subtitle">Donate to support HIGHER.ZIP</p>
-            <p className="fine-print">Total Donations: {totalDonations}</p>
+            <p className="fine-print">
+              Total Donations: {withCommasInt(Number(totalDonations))}
+            </p>
           </div>
           <div>
             <p>
@@ -283,39 +287,40 @@ export default function Permapool() {
           </div>
           <br />
           <div className="flex flex-col md:flex-row justify-between gap-[10px]">
+            {/* Locked in LP */}
             <div className="text-center w-full md:w-1/3 border-[0.5px] border-solid border-black">
               <h3>Locked in LP</h3>
               <br />
               <div className="flex flex-row justify-between gap-[10px] text-center mb-[10px] mx-[1rem] border-b-[0.5px] border-b-black">
                 <Tooltip content={formatUnits(lpEth, 18)}>
-                  <div>~ {Number(formatUnits(lpEth, 18)).toFixed(2)}</div>
+                  <div>~ {withCommas(Number(formatUnits(lpEth, 18)))}</div>
                 </Tooltip>
                 <div className="small-font">ETH</div>
               </div>
               <div className="flex flex-row justify-between gap-[10px] text-center mb-[10px] mx-[1rem] border-b-[0.5px] border-b-black">
                 <Tooltip content={formatUnits(lpToken, 18)}>
-                  <div className="text-center">
-                    ~ {Number(formatUnits(lpToken, 18)).toFixed(2)}
-                  </div>
+                  <div>~ {withCommas(Number(formatUnits(lpToken, 18)))}</div>
                 </Tooltip>
                 <div className="small-font">HIGHER</div>
               </div>
             </div>
+
+            {/* Unclaimed Fees */}
             <div className="text-center w-full md:w-1/3 border-[0.5px] border-solid border-black">
               <h3>Unclaimed Fees</h3>
               <br />
               <div className="flex flex-row justify-between gap-[10px] text-center mb-[10px] mx-[1rem] border-b-[0.5px] border-b-black">
                 <Tooltip content={formatUnits(unclaimedEthFees, 18)}>
-                  <div className="text-center">
-                    ~ {Number(formatUnits(unclaimedEthFees, 18)).toFixed(2)}
+                  <div>
+                    ~ {withCommas(Number(formatUnits(unclaimedEthFees, 18)))}
                   </div>
                 </Tooltip>
                 <div className="small-font">ETH</div>
               </div>
               <div className="flex flex-row justify-between gap-[10px] text-center mb-[10px] mx-[1rem] border-b-[0.5px] border-b-black">
                 <Tooltip content={formatUnits(unclaimedTokenFees, 18)}>
-                  <div className="text-center">
-                    ~ {Number(formatUnits(unclaimedTokenFees, 18)).toFixed(2)}
+                  <div>
+                    ~ {withCommas(Number(formatUnits(unclaimedTokenFees, 18)))}
                   </div>
                 </Tooltip>
                 <div className="small-font">HIGHER</div>
@@ -328,27 +333,30 @@ export default function Permapool() {
                 {claiming ? "claiming..." : "claim"}
               </button>
             </div>
+
+            {/* Total Claimed Fees */}
             <div className="text-center w-full md:w-1/3 border-[0.5px] border-solid border-black">
               <h3>Total Claimed Fees</h3>
               <br />
               <div className="flex flex-row justify-between gap-[10px] text-center mb-[10px] mx-[1rem] border-b-[0.5px] border-b-black">
                 <Tooltip content={formatUnits(claimedEthFees, 18)}>
-                  <div className="text-center">
-                    ~ {Number(formatUnits(claimedEthFees, 18)).toFixed(2)}
+                  <div>
+                    ~ {withCommas(Number(formatUnits(claimedEthFees, 18)))}
                   </div>
                 </Tooltip>
                 <div className="small-font">ETH</div>
               </div>
               <div className="flex flex-row justify-between gap-[10px] text-center mb-[10px] mx-[1rem] border-b-[0.5px] border-b-black">
                 <Tooltip content={formatUnits(claimedTokenFees, 18)}>
-                  <div className="text-center">
-                    ~ {Number(formatUnits(claimedTokenFees, 18)).toFixed(2)}
+                  <div>
+                    ~ {withCommas(Number(formatUnits(claimedTokenFees, 18)))}
                   </div>
                 </Tooltip>
                 <div className="small-font">HIGHER</div>
               </div>
             </div>
           </div>
+
           <div className="text-center mx-[1rem] my-[2rem]">
             <h3>Next claim</h3>
             <span>{formatCountdown(claimCountdown)}</span>

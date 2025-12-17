@@ -108,7 +108,6 @@ export default function MissionDetail({ mission }: { mission: Mission }) {
                   </thead>
                   <tbody>
                     {mission.entries.map((entry, i) => {
-                      // Construct profile link based on platform
                       const profileLink =
                         entry.platform === "Farcaster"
                           ? `https://warpcast.com/${entry.user.replace(

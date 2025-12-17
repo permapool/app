@@ -100,7 +100,10 @@ export default function Home() {
   const current = channels[channelIdx];
   const toasterRef = useRef<ToasterRef>(null);
 
+  const ENABLE_TOAST = false; // flip to true when ready
+
   useEffect(() => {
+    if (!ENABLE_TOAST) return;
     const timer = setTimeout(() => {
       toasterRef.current?.show({
         title: "Clicker Available",
