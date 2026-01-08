@@ -3,6 +3,10 @@ import { useEffect, useState, useRef, useCallback } from "react";
 
 import sdk, { Context } from "@farcaster/frame-sdk";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  useAccount,
+  useSignMessage,
+} from 'wagmi';
 
 import Squad from "./Squad";
 import ProposalList from "./ProposalList";
@@ -33,10 +37,37 @@ const channels: Channel[] = [
 ];
 
 export default function Home() {
+  const account = useAccount();
+
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [context, setContext] = useState<Context.FrameContext>();
   const [frameAdded, setFrameAdded] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [expiration, setExpiration] = useState('');
+
+  const { signMessage, data: signature } = useSignMessage();
+
+  const message = `Signing in to HZIP as ${account.address}`;
+
+  const signIn = async () => {
+    if (!account.address) {
+      setShowChat(true);
+    } else {
+      const expiration = String((Math.floor(Date.now() / 1000) + (86400)));
+      setExpiration(expiration);
+
+      console.log(`${message}\n\nExpiration: ${expiration}`);
+      signMessage({
+        message: `${message}\n\nExpiration: ${expiration}`,
+      });
+    }
+  }
+
+  useEffect(() => {
+    if (signature) {
+      setShowChat(true);
+    }
+  }, [signature]);
 
   const {
     showPermapool,
@@ -216,7 +247,7 @@ export default function Home() {
         {
           showChat ? (
             <iframe
-              src="https://basetrenches.com/room/0x0578d8A44db98B23BF096A382e016e29a5Ce0ffe"
+              src={`https://basetrenches.com/room/0x0578d8A44db98B23BF096A382e016e29a5Ce0ffe?address=${account.address}&message=${message}&signature=${signature}&expiration=${expiration}`}
               style={{
                 border: '1px solid #666',
                 borderRadius: '12px',
@@ -238,7 +269,13 @@ export default function Home() {
             bottom: '1em',
             left: '1em'
           }}
-          onClick={() => setShowChat(!showChat)}
+          onClick={() => {
+            if (!showChat) {
+              signIn();
+            } else {
+              setShowChat(false);
+            }
+          }}
           className="text-white w-14 aspect-square rounded-full flex items-center justify-center text-lg font-semibold bg-green-600 hover:bg-[var(--amber)] transition-all duration-100 shadow-md select-none touch-manipulation"
         >
           {showChat ? '✕' : '🗯️'}
