@@ -43,7 +43,7 @@ export default function Home() {
   const [context, setContext] = useState<Context.FrameContext>();
   const [frameAdded, setFrameAdded] = useState(false);
   const [showChat, setShowChat] = useState(false);
-  const [expiration, setExpiration] = useState('');
+  const [expiration, setExpiration] = useState('0');
 
   const { signMessage, data: signature } = useSignMessage();
 
@@ -51,6 +51,8 @@ export default function Home() {
 
   const signIn = async () => {
     if (!account.address) {
+      setShowChat(true);
+    } else if (signature && parseInt(expiration) > Math.floor(Date.now() / 1000)) {
       setShowChat(true);
     } else {
       const expiration = String((Math.floor(Date.now() / 1000) + (86400)));
