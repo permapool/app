@@ -7,6 +7,7 @@ import {
   useAccount,
   useSignMessage,
 } from 'wagmi';
+import { useModal } from 'connectkit';
 
 import Squad from "./Squad";
 import ProposalList from "./ProposalList";
@@ -44,14 +45,14 @@ export default function Home() {
   const [frameAdded, setFrameAdded] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [expiration, setExpiration] = useState('0');
-
+  const { setOpen } = useModal();
   const { signMessage, data: signature } = useSignMessage();
 
   const message = `Signing in to HZIP as ${account.address}`;
 
   const signIn = async () => {
     if (!account.address) {
-      setShowChat(true);
+      setOpen(true);
     } else if (signature && parseInt(expiration) > Math.floor(Date.now() / 1000)) {
       setShowChat(true);
     } else {
