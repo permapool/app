@@ -111,6 +111,12 @@ export default function Navigation() {
               >
                 Missions
               </Link>
+              <Link
+                href="/shop"
+                className="w-full max-w-xs mx-auto block text-center bg-black text-white py-2 px-3 transition-colors hover:bg-[green] hover:text-white m-2 text-xs uppercase"
+              >
+                Shop
+              </Link>
             </>
           ) : (
             <>
@@ -125,6 +131,12 @@ export default function Navigation() {
                 className="w-full max-w-xs mx-auto block text-center bg-black text-white py-2 px-3 transition-colors hover:bg-[green] hover:text-white m-2 text-xs uppercase"
               >
                 Missions
+              </Link>
+              <Link
+                href="/shop"
+                className="w-full max-w-xs mx-auto block text-center bg-black text-white py-2 px-3 transition-colors hover:bg-[green] hover:text-white m-2 text-xs uppercase"
+              >
+                Shop
               </Link>
               <Link
                 href="/next"
@@ -157,6 +169,14 @@ export default function Navigation() {
       {mobileOpen && (
         <div id="mobile-nav-menu" role="menu" className="md:hidden px-2 pb-2">
           <div className="mt-2 grid grid-cols-1 gap-2">
+            <Link
+              href="/shop"
+              role="menuitem"
+              className="w-full text-center bg-black text-white py-2 px-3 text-xs uppercase hover:bg-[green] hover:text-white"
+              onClick={() => setMobileOpen(false)}
+            >
+              Shop
+            </Link>
             <button
               role="menuitem"
               className="w-full bg-[var(--lghtgrey)] text-black py-2 px-3 text-xs uppercase hover:bg-[green] hover:text-white"
