@@ -22,7 +22,14 @@ const missions = [
   },
   {
     id: "hz004",
-    title: "HZ004 · ???????????????",
+    title: "HZ004 · Year of the Horse Calendar",
+    summary:
+      "Create an image of a horse, higher coded.",
+    status: "Published",
+  },
+  {
+    id: "hz005",
+    title: "HZ005 · ???????????????",
     summary: "??????????????????????",
     status: "Incoming",
   },
@@ -51,7 +58,6 @@ const statusStyles: Record<Status, string> = {
   Shelved: "bg-rose-100 text-rose-800 border border-rose-200",
 };
 
-
 function StatusBadge({ status }: { status: Status }) {
   return (
     <span
@@ -68,7 +74,8 @@ export default function MissionsPage() {
       <header className="mb-10">
         <h1>Missions</h1>
         <p className="mt-2 text-foreground max-w-3xl">
-          Broadcast calls for bumpers, intros, and IDs. Short missions, open to all.
+          Broadcast calls for bumpers, intros, and IDs. Short missions, open to
+          all.
         </p>
       </header>
 
@@ -92,7 +99,6 @@ export default function MissionsPage() {
                     {mission.title}
                   </Link>
                 </h3>
-                
               </div>
               <p className="text-sm text-zinc-600">{mission.summary}</p>
             </div>

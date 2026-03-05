@@ -17,6 +17,7 @@ interface Mission {
     user: string;
     platform: string;
     link: string;
+    winner?: boolean;
   }[];
 }
 
@@ -99,6 +100,7 @@ export default function MissionDetail({ mission }: { mission: Mission }) {
             {mission.entries && mission.entries.length > 0 && (
               <div className="mt-6">
                 <h3>Entries</h3>
+
                 <table className="mt-2 w-full border border-zinc-700 text-sm">
                   <thead className="sticky top-0 bg-zinc-900 text-white z-10">
                     <tr>
@@ -106,28 +108,36 @@ export default function MissionDetail({ mission }: { mission: Mission }) {
                       <th className="text-left px-3 py-2">Entry</th>
                     </tr>
                   </thead>
+
                   <tbody>
                     {mission.entries.map((entry, i) => {
                       const profileLink =
                         entry.platform === "Farcaster"
-                          ? `https://warpcast.com/${entry.user.replace(
-                              "@",
-                              ""
-                            )}`
+                          ? `https://warpcast.com/${entry.user.replace("@", "")}`
                           : `https://x.com/${entry.user.replace("@", "")}`;
 
                       return (
-                        <tr key={i} className="border-t border-zinc-800">
+                        <tr
+                          key={i}
+                          className={`border-t border-zinc-800 ${
+                            entry.winner ? "bg-[var(--amber)]/20" : ""
+                          }`}
+                        >
                           <td className="px-3 py-2">
                             <a
                               href={profileLink}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="underline text-foreground hover:text-green-500"
+                              className={`underline ${
+                                entry.winner
+                                  ? "text-[var(--amber)] font-semibold"
+                                  : "text-foreground hover:text-green-500"
+                              }`}
                             >
                               {entry.user}
                             </a>
                           </td>
+
                           <td className="px-3 py-2">
                             <a
                               href={entry.link}

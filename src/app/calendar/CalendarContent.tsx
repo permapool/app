@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { sdk } from "@farcaster/miniapp-sdk";
+import BarLoader from "~/components/BarLoader";
 
-const STORE_URL = "https://shop.slice.so/store/2899";
+const STORE_URL = "https://shop.slice.so/store/2899?productId=5";
 const CREDIT_CARD_URL =
   "https://higher-zip.myshopify.com/products/higher-calendar?variant=44811040587878";
 
@@ -25,6 +26,7 @@ export default function CalendarContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [product, setProduct] = useState<SliceProduct | null>(null);
+  const [activeImage, setActiveImage] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -33,9 +35,7 @@ export default function CalendarContent() {
       try {
         const inMiniApp = await sdk.isInMiniApp();
         if (mounted) setIsMiniApp(inMiniApp);
-        if (inMiniApp) {
-          await sdk.actions.ready();
-        }
+        if (inMiniApp) await sdk.actions.ready();
       } catch {
         if (mounted) setIsMiniApp(false);
       }
@@ -84,6 +84,29 @@ export default function CalendarContent() {
 
   const productImage = useMemo(() => product?.images?.[0] ?? null, [product]);
 
+  const images = useMemo(() => {
+    const fallbackImages = [
+      "/yotfh/photo_2026-03-03_02-12-48.jpg",
+      "/yotfh/photo_2026-03-03_02-12-58.jpg",
+      "/yotfh/photo_2026-03-03_02-13-00.jpg",
+      "/yotfh/photo_2026-03-03_02-13-02.jpg",
+      "/yotfh/photo_2026-03-03_02-13-03.jpg",
+      "/yotfh/photo_2026-03-03_02-13-05.jpg",
+      "/yotfh/photo_2026-03-03_02-13-07.jpg",
+      "/yotfh/photo_2026-03-03_02-13-09.jpg",
+      "/yotfh/photo_2026-03-03_02-13-12.jpg",
+      "/yotfh/photo_2026-03-03_02-13-14.jpg",
+    ];
+
+    return productImage ? [productImage, ...fallbackImages] : fallbackImages;
+  }, [productImage]);
+
+  useEffect(() => {
+    if (images.length > 0) {
+      setActiveImage(images[0]);
+    }
+  }, [images]);
+
   const handleBuyClick = async (event: React.MouseEvent<HTMLAnchorElement>) => {
     if (!isMiniApp) return;
 
@@ -97,7 +120,7 @@ export default function CalendarContent() {
   };
 
   const handleCreditCardClick = async (
-    event: React.MouseEvent<HTMLAnchorElement>
+    event: React.MouseEvent<HTMLAnchorElement>,
   ) => {
     if (!isMiniApp) return;
 
@@ -111,7 +134,11 @@ export default function CalendarContent() {
   };
 
   if (loading) {
-    return <p className="text-sm uppercase tracking-wide">Loading calendar...</p>;
+    return (
+      <div className="w-full h-8">
+        <BarLoader intervalRate={100} />
+      </div>
+    );
   }
 
   if (error || !product) {
@@ -124,23 +151,58 @@ export default function CalendarContent() {
 
   return (
     <div className="w-full max-w-xl border border-black bg-white p-4 shadow-solid">
-      <h1 className="text-xl md:text-2xl uppercase tracking-wide">{product.name}</h1>
-      {product.shortDescription ? (
-        <p className="mt-2 text-sm leading-relaxed">{product.shortDescription}</p>
-      ) : null}
+      <div className="flex justify-between items-center border-b p-2 border-foreground">
+        <h2 className="text-foreground text-xl md:text-2xl uppercase tracking-wide">
+          {product.name}
+        </h2>
 
-      {productImage ? (
+        <button className="flex rounded-full text-white h-full w-[50]">↑</button>
+      </div>
+
+      <div className="flex justify-between mt-2 gap-4 items-center">
+        {product.shortDescription && (
+          <p className="text-sm mt-4 leading-relaxed w-1/2 text-grey">
+            {product.shortDescription}
+          </p>
+        )}
+
+        <div className="text-5xl text-right text-[var(--amber)]">$44.44</div>
+      </div>
+
+      {activeImage && (
         <div className="mt-4 w-full bg-white p-2">
           <img
-            src={productImage}
+            src={activeImage}
             alt={product.name ?? "Higher Calendar"}
             className="block h-auto max-w-full"
           />
+
+          {images.length > 1 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {images.map((img) => (
+                <button
+                  key={img}
+                  onClick={() => setActiveImage(img)}
+                  className={`border p-1 ${
+                    activeImage === img ? "border-black" : "border-gray-300"
+                  }`}
+                >
+                  <img
+                    src={img}
+                    className="h-16 w-auto cursor-pointer opacity-90 hover:opacity-100"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-      ) : null}
-      {product.description ? (
-        <p className="mt-4 whitespace-pre-line text-sm leading-relaxed">{product.description}</p>
-      ) : null}
+      )}
+
+      {product.description && (
+        <p className="mt-4 whitespace-pre-line text-sm leading-relaxed">
+          {product.description}
+        </p>
+      )}
 
       <div className="mt-4 flex flex-wrap gap-2">
         <a
@@ -148,7 +210,7 @@ export default function CalendarContent() {
           target={isMiniApp ? undefined : "_blank"}
           rel={isMiniApp ? undefined : "noreferrer"}
           onClick={handleBuyClick}
-          className="inline-block bg-black px-4 py-2 text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-green-700"
+          className="inline-block bg-black px-4 py-2 text-sm font-semibold uppercase tracking-wide text-white transition-colors hover-hover:bg-green-700"
         >
           Buy with USDC
         </a>
@@ -158,7 +220,7 @@ export default function CalendarContent() {
           target={isMiniApp ? undefined : "_blank"}
           rel={isMiniApp ? undefined : "noreferrer"}
           onClick={handleCreditCardClick}
-          className="inline-block bg-white px-4 py-2 text-sm font-semibold uppercase tracking-wide text-black border border-black transition-colors hover:bg-black hover:text-white"
+          className="inline-block bg-white px-4 py-2 text-sm font-semibold uppercase tracking-wide text-black border border-black transition-colors hover-hover:bg-black hover-hover:text-white"
         >
           Buy with Credit Card
         </a>
