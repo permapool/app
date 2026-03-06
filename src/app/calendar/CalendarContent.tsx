@@ -150,80 +150,87 @@ export default function CalendarContent() {
   }
 
   return (
-    <div className="w-full max-w-xl border border-black bg-white p-4 shadow-solid">
-      <div className="flex justify-between items-center border-b p-2 border-foreground">
-        <h2 className="text-foreground text-xl md:text-2xl uppercase tracking-wide">
-          {product.name}
-        </h2>
-
-        <button className="flex rounded-full text-white h-full w-[50]">↑</button>
+    <div>
+      {" "}
+      {/* className="w-full max-w-xl border border-black bg-white p-4 shadow-solid" */}
+      <div className="flex justify-between items-center p-2 mb-4">
+        <button className="flex rounded-full text-white h-full w-[50]">
+          ↑
+        </button>
       </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {activeImage && (
+          <div className="bg-white">
+            <img
+              src={activeImage}
+              alt={product.name ?? "Higher Calendar"}
+              className="block h-auto max-w-full"
+            />
 
-      <div className="flex justify-between mt-2 gap-4 items-center">
-        {product.shortDescription && (
-          <p className="text-sm mt-4 leading-relaxed w-1/2 text-grey">
-            {product.shortDescription}
-          </p>
+            {images.length > 1 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {images.map((img) => (
+                  <button
+                    key={img}
+                    onClick={() => setActiveImage(img)}
+                    className={`border p-1 ${
+                      activeImage === img ? "border-black" : "border-gray-300"
+                    }`}
+                  >
+                    <img
+                      src={img}
+                      className="h-16 w-auto cursor-pointer opacity-90 hover:opacity-100"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         )}
 
-        <div className="text-5xl text-right text-[var(--amber)]">$44.44</div>
-      </div>
+        <div className="border border-black bg-white p-4 shadow-solid">
+          <h2 className="text-foreground text-xl md:text-2xl uppercase tracking-wide">
+            {product.name}
+          </h2>
 
-      {activeImage && (
-        <div className="mt-4 w-full bg-white p-2">
-          <img
-            src={activeImage}
-            alt={product.name ?? "Higher Calendar"}
-            className="block h-auto max-w-full"
-          />
+          <div>
+            {product.shortDescription && (
+              <p className="text-sm mt-4 leading-relaxed text-grey">
+                {product.shortDescription}
+              </p>
+            )}
+          </div>
 
-          {images.length > 1 && (
-            <div className="mt-2 flex flex-wrap gap-2">
-              {images.map((img) => (
-                <button
-                  key={img}
-                  onClick={() => setActiveImage(img)}
-                  className={`border p-1 ${
-                    activeImage === img ? "border-black" : "border-gray-300"
-                  }`}
-                >
-                  <img
-                    src={img}
-                    className="h-16 w-auto cursor-pointer opacity-90 hover:opacity-100"
-                  />
-                </button>
-              ))}
-            </div>
+          <div className="text-5xl mt-4 text-[var(--green)]">$44.44</div>
+
+          {product.description && (
+            <p className="mt-4 whitespace-pre-line text-sm leading-relaxed">
+              {product.description}
+            </p>
           )}
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            <a
+              href={STORE_URL}
+              target={isMiniApp ? undefined : "_blank"}
+              rel={isMiniApp ? undefined : "noreferrer"}
+              onClick={handleBuyClick}
+              className="inline-block bg-black px-4 py-2 text-sm font-semibold uppercase tracking-wide text-white transition-colors hover-hover:bg-green-700"
+            >
+              Buy with USDC
+            </a>
+
+            <a
+              href={CREDIT_CARD_URL}
+              target={isMiniApp ? undefined : "_blank"}
+              rel={isMiniApp ? undefined : "noreferrer"}
+              onClick={handleCreditCardClick}
+              className="inline-block bg-white px-4 py-2 text-sm font-semibold uppercase tracking-wide text-black border border-black transition-colors hover-hover:bg-black hover-hover:text-white"
+            >
+              Buy with Credit Card
+            </a>
+          </div>
         </div>
-      )}
-
-      {product.description && (
-        <p className="mt-4 whitespace-pre-line text-sm leading-relaxed">
-          {product.description}
-        </p>
-      )}
-
-      <div className="mt-4 flex flex-wrap gap-2">
-        <a
-          href={STORE_URL}
-          target={isMiniApp ? undefined : "_blank"}
-          rel={isMiniApp ? undefined : "noreferrer"}
-          onClick={handleBuyClick}
-          className="inline-block bg-black px-4 py-2 text-sm font-semibold uppercase tracking-wide text-white transition-colors hover-hover:bg-green-700"
-        >
-          Buy with USDC
-        </a>
-
-        <a
-          href={CREDIT_CARD_URL}
-          target={isMiniApp ? undefined : "_blank"}
-          rel={isMiniApp ? undefined : "noreferrer"}
-          onClick={handleCreditCardClick}
-          className="inline-block bg-white px-4 py-2 text-sm font-semibold uppercase tracking-wide text-black border border-black transition-colors hover-hover:bg-black hover-hover:text-white"
-        >
-          Buy with Credit Card
-        </a>
       </div>
     </div>
   );
