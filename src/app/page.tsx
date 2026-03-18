@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import Home from "~/components/Home";
 import { getAppUrl } from "~/lib/data";
+import { Room } from "./Room";
 
 const appUrl = getAppUrl();
 
@@ -36,6 +37,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function HomePage() {
   return (
-    <Home />
+    <Room>
+      <Home />
+    </Room>
   );
 }

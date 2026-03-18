@@ -17,7 +17,6 @@ export default function CreateProposal() {
   const [address, setAddress] = useState('');
   const [weight, setWeight] = useState('');
   const [proposing, setProposing] = useState(false);
-  const [cacheBust, setCacheBust] = useState(0);
 
 
   const { data: weightRes } = useReadContract({
@@ -42,7 +41,6 @@ export default function CreateProposal() {
       setTimeout(() => window.alert(writeError.shortMessage), 1);
     } else if (isConfirmed) {
       setProposing(false);
-      setCacheBust(cacheBust + 1);
     }
   }, [writeError, isConfirmed]);
 

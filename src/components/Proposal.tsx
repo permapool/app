@@ -52,7 +52,7 @@ export default function ProposalList({ proposal, isMember }: { proposal: Proposa
       setTimeout(() => window.alert(writeError.shortMessage), 1);
     } else if (isConfirmed) {
       setVoting(false);
-      setCacheBust(cacheBust + 1);
+      setCacheBust((current) => current + 1);
     }
   }, [writeError, isConfirmed]);
 

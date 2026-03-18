@@ -154,9 +154,9 @@ export default function Permapool() {
       }
       setClaiming(false);
       setDonating(false);
-      setCacheBust(cacheBust + 1);
+      setCacheBust((current) => current + 1);
     }
-  }, [writeError, isConfirmed]);
+  }, [account.address, donating, isConfirmed, totalDonations, value, writeData, writeError]);
 
   const donate = async () => {
     setDonating(true);

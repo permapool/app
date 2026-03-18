@@ -42,7 +42,7 @@ export default function Squad() {
       setTimeout(() => window.alert(writeError.shortMessage), 1);
     } else if (isConfirmed) {
       setDecreasing(false);
-      setCacheBust(cacheBust + 1);
+      setCacheBust((current) => current + 1);
     }
   }, [writeError, isConfirmed]);
 

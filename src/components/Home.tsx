@@ -1,5 +1,9 @@
 "use client";
 import { useEffect, useState, useRef, useCallback } from "react";
+import {
+  useOthers,
+  useUpdateMyPresence,
+} from "@liveblocks/react/suspense";
 
 import sdk, { Context } from "@farcaster/frame-sdk";
 import { motion, AnimatePresence } from "framer-motion";
@@ -36,9 +40,13 @@ const channels: Channel[] = [
   { type: "vod", src: "/flag.mp4" },
   { type: "vod", src: "/pegasus-billboard.mp4" },
 ];
+const ENABLE_TOAST = false;
 
 export default function Home() {
   const account = useAccount();
+  const updateMyPresence = useUpdateMyPresence();
+  const others = useOthers();
+  const remoteCursors = others.filter((other) => other.presence.cursor !== null);
 
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [context, setContext] = useState<Context.FrameContext>();
@@ -134,8 +142,6 @@ export default function Home() {
   const current = channels[channelIdx];
   const toasterRef = useRef<ToasterRef>(null);
 
-  const ENABLE_TOAST = false; // flip to true when ready
-
   useEffect(() => {
     if (!ENABLE_TOAST) return;
     const timer = setTimeout(() => {
@@ -150,6 +156,55 @@ export default function Home() {
 
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    let frame: number | null = null;
+
+    const clearCursor = () => {
+      if (frame !== null) {
+        cancelAnimationFrame(frame);
+        frame = null;
+      }
+
+      updateMyPresence({ cursor: null });
+    };
+
+    const handlePointerMove = (event: PointerEvent) => {
+      if (frame !== null) {
+        cancelAnimationFrame(frame);
+      }
+
+      frame = window.requestAnimationFrame(() => {
+        updateMyPresence({
+          cursor: { x: event.clientX, y: event.clientY },
+        });
+        frame = null;
+      });
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        clearCursor();
+      }
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("blur", clearCursor);
+    document.addEventListener("mouseleave", clearCursor);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      if (frame !== null) {
+        cancelAnimationFrame(frame);
+      }
+
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("blur", clearCursor);
+      document.removeEventListener("mouseleave", clearCursor);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      updateMyPresence({ cursor: null });
+    };
+  }, [updateMyPresence]);
 
   return (
     <>
@@ -290,6 +345,43 @@ export default function Home() {
           toggleMute={toggleMute}
         />
       </div>
+      <div className="pointer-events-none fixed inset-0 z-[10010]">
+        {remoteCursors.map((other) => {
+          const cursor = other.presence.cursor;
+
+          if (!cursor) {
+            return null;
+          }
+
+          return (
+            <div
+              key={other.connectionId}
+              className="absolute"
+              style={{
+                transform: `translate(${cursor.x}px, ${cursor.y}px)`,
+              }}
+            >
+              <div className="relative">
+                <div
+                  className="h-0 w-0"
+                  style={{
+                    borderTop: "10px solid green",
+                    borderRight: "10px solid green",
+                    borderRadius: "50%",
+                  }}
+                />
+                <div className="absolute left-3 top-3 bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-black shadow-solid">
+                  anon {other.connectionId}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed bottom-0 right-0 z-[10020] h-16 w-40 bg-black"
+      />
     </>
   );
 }

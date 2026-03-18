@@ -179,6 +179,7 @@ export default function CalendarContent() {
                   >
                     <img
                       src={img}
+                      alt={`${product.name ?? "Higher Calendar"} thumbnail`}
                       className="h-16 w-auto cursor-pointer opacity-90 hover:opacity-100"
                     />
                   </button>
