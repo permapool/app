@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import {
   LiveblocksProvider,
   RoomProvider,
@@ -13,6 +13,20 @@ const publicApiKey =
 export function Room({ children }: { children: ReactNode }) {
   if (!publicApiKey) {
     throw new Error("Missing NEXT_PUBLIC_LIVEBLOCKS_PUBLIC_KEY");
+  }
+
+  const [enabled, setEnabled] = useState(false);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      setEnabled(true);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  if (!enabled) {
+    return <div>Triangulating</div>;
   }
 
   return (

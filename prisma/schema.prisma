@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(uuid()) @db.Uuid
+  privyId      String        @unique
+  email        String?
+  username     String        @unique
+  displayName  String?
+  hasCustomHandle Boolean    @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  wallets      Wallet[]
+  userRoles    UserRole[]
+  chatMessages ChatMessage[]
+  reactions    Reaction[]
+}
+
+model Wallet {
+  id        String   @id @default(uuid()) @db.Uuid
+  address   String
+  chainId   Int
+  userId    String   @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([address, chainId])
+  @@index([userId])
+}
+
+model Role {
+  id        String     @id @default(uuid()) @db.Uuid
+  name      String     @unique
+  userRoles UserRole[]
+}
+
+model UserRole {
+  userId String @db.Uuid
+  roleId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@index([roleId])
+}
+
+model ChatSession {
+  id              String       @id @default(uuid()) @db.Uuid
+  createdAt       DateTime     @default(now())
+  isThread        Boolean      @default(false)
+  parentMessageId String?      @unique @db.Uuid
+  parentMessage   ChatMessage? @relation("ThreadRoot", fields: [parentMessageId], references: [id])
+  messages        ChatMessage[]
+
+  @@index([parentMessageId])
+}
+
+model ChatMessage {
+  id             String       @id @default(uuid()) @db.Uuid
+  content        String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  userId         String       @db.Uuid
+  sessionId      String       @db.Uuid
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session        ChatSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  reactions      Reaction[]
+  spawnedSession ChatSession? @relation("ThreadRoot")
+
+  @@index([sessionId])
+  @@index([userId])
+}
+
+model Reaction {
+  id        String      @id @default(uuid()) @db.Uuid
+  type      String
+  createdAt DateTime    @default(now())
+  userId    String      @db.Uuid
+  messageId String      @db.Uuid
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, messageId, type])
+  @@index([messageId])
+  @@index([userId])
+}

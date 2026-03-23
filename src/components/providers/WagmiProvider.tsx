@@ -1,43 +1,24 @@
 "use client";
 
-import { getDefaultConfig } from "connectkit";
-import { ConnectKitProvider } from "connectkit";
-import { createConfig, http, WagmiProvider } from "wagmi";
+import { createConfig, WagmiProvider } from "@privy-io/wagmi";
+import { http } from "wagmi";
 import { base } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { farcasterFrame } from "@farcaster/frame-wagmi-connector";
 import { getRpcUrl } from "~/lib/data";
 
-const defaultConfig = getDefaultConfig({
+export const config = createConfig({
   chains: [base],
-  walletConnectProjectId: '1f21c56d4b92829f7191cd45fa96cb1a',
-  appName: "Higher",
   transports: {
     [base.id]: http(getRpcUrl()),
   },
 });
-// @ts-expect-error: TS2339
-defaultConfig.connectors?.push(farcasterFrame());
-export const config = createConfig(defaultConfig);
 
 const queryClient = new QueryClient();
 
 export default function Provider({ children }: { children: React.ReactNode }) {
   return (
-    <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
-        <ConnectKitProvider
-        theme="auto"
-        customTheme={{
-          "--ck-connectbutton-background": "#000",
-          "--ck-connectbutton-color": "#fff",
-          "--ck-border-radius": "30px",
-          "--ck-font-family": "monospace",
-        }}
-        >
-          {children}
-        </ConnectKitProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
+    <QueryClientProvider client={queryClient}>
+      <WagmiProvider config={config}>{children}</WagmiProvider>
+    </QueryClientProvider>
   );
 }

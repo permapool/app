@@ -11,6 +11,7 @@ import { shortAddress } from "~/lib/formatting";
 import { governanceAbi, governanceAddress } from "~/constants/abi-governance";
 import { switchChain } from "@wagmi/core";
 import { config } from "~/components/providers/WagmiProvider";
+import { useRequireWallet } from "~/lib/auth/useRequireWallet";
 
 import { createPublicClient, http } from "viem";
 import { mainnet } from "viem/chains";
@@ -22,6 +23,7 @@ const client = createPublicClient({
 
 export default function Squad() {
   const account = useAccount();
+  const requireWallet = useRequireWallet();
   const [cacheBust, setCacheBust] = useState(0);
   const [decreasing, setDecreasing] = useState(false);
 
@@ -100,6 +102,10 @@ export default function Squad() {
   }, [members]);
 
   const decrease = async (newWeight: bigint) => {
+    if (!(await requireWallet())) {
+      return;
+    }
+
     setDecreasing(true);
     if (account.chainId != base.id) {
       await switchChain(config, { chainId: base.id });

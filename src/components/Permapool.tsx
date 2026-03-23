@@ -19,8 +19,10 @@ import Tooltip from "./ui/Tooltip";
 import { DonationReceipt, DonationReceiptProps } from "./ui/DonationReceipt";
 
 import { config } from "~/components/providers/WagmiProvider";
+import { useRequireWallet } from "~/lib/auth/useRequireWallet";
 export default function Permapool() {
   const account = useAccount();
+  const requireWallet = useRequireWallet();
 
   const [value, setValue] = useState("");
   const [donating, setDonating] = useState(false);
@@ -159,6 +161,10 @@ export default function Permapool() {
   }, [account.address, donating, isConfirmed, totalDonations, value, writeData, writeError]);
 
   const donate = async () => {
+    if (!(await requireWallet())) {
+      return;
+    }
+
     setDonating(true);
     if (account.chainId != base.id) {
       await switchChain(config, { chainId: base.id });
@@ -174,6 +180,10 @@ export default function Permapool() {
   };
 
   const claim = async () => {
+    if (!(await requireWallet())) {
+      return;
+    }
+
     setClaiming(true);
     if (account.chainId != base.id) {
       await switchChain(config, { chainId: base.id });

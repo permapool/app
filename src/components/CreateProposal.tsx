@@ -10,9 +10,11 @@ import { base } from "wagmi/chains";
 import { governanceAbi, governanceAddress } from "~/constants/abi-governance";
 import { switchChain } from '@wagmi/core'
 import { config } from '~/components/providers/WagmiProvider';
+import { useRequireWallet } from "~/lib/auth/useRequireWallet";
 
 export default function CreateProposal() {
   const account = useAccount();
+  const requireWallet = useRequireWallet();
 
   const [address, setAddress] = useState('');
   const [weight, setWeight] = useState('');
@@ -46,6 +48,10 @@ export default function CreateProposal() {
 
 
   const propose = async () => {
+    if (!(await requireWallet())) {
+      return;
+    }
+
     setProposing(true);
     if (account.chainId != base.id) {
       await switchChain(config, { chainId: base.id });

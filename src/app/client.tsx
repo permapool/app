@@ -1,24 +1,27 @@
 'use client';
 
-import WagmiProvider from "~/components/providers/WagmiProvider";
-import Navigation from "~/components/Navigation";
+import dynamic from "next/dynamic";
+import PrivyAuthProvider from "~/components/providers/PrivyAuthProvider";
 import { MinimizeMenusProvider } from "~/components/providers/MinimizeMenus";
 import { ToggleProvider } from "~/components/providers/ToggleContext";
+
+const Navigation = dynamic(() => import("~/components/Navigation"), {
+  ssr: false,
+});
 
 export default function Client({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  
   return (
-    <WagmiProvider>
+    <PrivyAuthProvider>
       <MinimizeMenusProvider>
         <ToggleProvider>
-        <Navigation />
-        {children}
+          <Navigation />
+          {children}
         </ToggleProvider>
       </MinimizeMenusProvider>
-    </WagmiProvider>
+    </PrivyAuthProvider>
   );
 }

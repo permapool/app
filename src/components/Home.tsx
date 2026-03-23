@@ -1,4 +1,5 @@
 "use client";
+import dynamic from "next/dynamic";
 import { useEffect, useState, useRef, useCallback } from "react";
 import {
   useOthers,
@@ -7,25 +8,28 @@ import {
 
 import sdk, { Context } from "@farcaster/frame-sdk";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  useAccount,
-  useSignMessage,
-} from 'wagmi';
-import { useModal } from 'connectkit';
 
-import Squad from "./Squad";
-import ProposalList from "./ProposalList";
-import Permapool from "./Permapool";
-import Manifesto from "./Manifesto";
-
-import Television from "./Television";
 import NewClicker from "./ui/NewClicker";
 
 import { useMinimize } from "./providers/MinimizeMenus";
 import { useToggle } from "./providers/ToggleContext";
-import Live from "./Live";
 
 import Toaster, { ToasterRef } from "./ui/Toast";
+
+const Permapool = dynamic(() => import("./Permapool"), {
+  loading: () => <div className="p-4 text-xs uppercase">Loading permapool...</div>,
+});
+const Squad = dynamic(() => import("./Squad"), {
+  loading: () => <div className="p-4 text-xs uppercase">Loading squad...</div>,
+});
+const ProposalList = dynamic(() => import("./ProposalList"), {
+  loading: () => <div className="p-4 text-xs uppercase">Loading proposals...</div>,
+});
+const Manifesto = dynamic(() => import("./Manifesto"), {
+  loading: () => <div className="p-4 text-xs uppercase">Loading manifesto...</div>,
+});
+const Television = dynamic(() => import("./Television"));
+const Live = dynamic(() => import("./Live"));
 
 type VodChannel = { type: "vod"; src: string };
 type LiveChannel = { type: "live" };
@@ -43,42 +47,14 @@ const channels: Channel[] = [
 const ENABLE_TOAST = false;
 
 export default function Home() {
-  const account = useAccount();
   const updateMyPresence = useUpdateMyPresence();
   const others = useOthers();
   const remoteCursors = others.filter((other) => other.presence.cursor !== null);
+  const [hasPainted, setHasPainted] = useState(false);
 
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [context, setContext] = useState<Context.FrameContext>();
   const [frameAdded, setFrameAdded] = useState(false);
-  const [showChat, setShowChat] = useState(false);
-  const [expiration, setExpiration] = useState('0');
-  const { setOpen } = useModal();
-  const { signMessage, data: signature } = useSignMessage();
-
-  const message = `Signing in to HZIP as ${account.address}`;
-
-  const signIn = async () => {
-    if (!account.address) {
-      setOpen(true);
-    } else if (signature && parseInt(expiration) > Math.floor(Date.now() / 1000)) {
-      setShowChat(true);
-    } else {
-      const expiration = String((Math.floor(Date.now() / 1000) + (86400)));
-      setExpiration(expiration);
-
-      console.log(`${message}\n\nExpiration: ${expiration}`);
-      signMessage({
-        message: `${message}\n\nExpiration: ${expiration}`,
-      });
-    }
-  }
-
-  useEffect(() => {
-    if (signature) {
-      setShowChat(true);
-    }
-  }, [signature]);
 
   const {
     showPermapool,
@@ -98,8 +74,14 @@ export default function Home() {
   };
 
   const added = frameAdded || context?.client?.added || false;
-  const fid = context?.user?.fid;
-  console.log(fid);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      setHasPainted(true);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -108,14 +90,14 @@ export default function Home() {
       sdk.actions.ready({});
     };
 
-    if (sdk && !isSDKLoaded) {
+    if (hasPainted && sdk && !isSDKLoaded) {
       setIsSDKLoaded(true);
       load();
       return () => {
         sdk.removeAllListeners();
       };
     }
-  }, [isSDKLoaded]);
+  }, [hasPainted, isSDKLoaded]);
 
   const addFrame = useCallback(async () => {
     try {
@@ -158,6 +140,10 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    if (!hasPainted) {
+      return;
+    }
+
     let frame: number | null = null;
 
     const clearCursor = () => {
@@ -204,7 +190,7 @@ export default function Home() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       updateMyPresence({ cursor: null });
     };
-  }, [updateMyPresence]);
+  }, [hasPainted, updateMyPresence]);
 
   return (
     <>
@@ -292,52 +278,20 @@ export default function Home() {
           </motion.div>
         </div>
 
-        <Television
-          isMuted={isMuted}
-          src={current.type === "vod" ? current.src : undefined}
-        >
-          {current.type === "live" && playbackId ? (
-            <div className="flex flex-col justify-center items-center h-screen md:h-auto md:block">
-              <Live playbackId={playbackId} isMuted={isMuted} />
-            </div>
-          ) : null}
-        </Television>
-        {
-          showChat ? (
-            <iframe
-              src={`https://basetrenches.com/room/0x0578d8A44db98B23BF096A382e016e29a5Ce0ffe?address=${account.address}&message=${message}&signature=${signature}&expiration=${expiration}`}
-              style={{
-                border: '1px solid #666',
-                borderRadius: '12px',
-                overflow: 'hidden',
-                position: 'fixed',
-                bottom: '3.5em',
-                left: '1em',
-                width: '280px',
-                maxWidth: '90%',
-                height: '350px',
-                maxHeight: '80%'
-              }}
-            />
-          ) : null
-        }
-        <button
-          style={{
-            position: 'fixed',
-            bottom: '1em',
-            left: '1em'
-          }}
-          onClick={() => {
-            if (!showChat) {
-              signIn();
-            } else {
-              setShowChat(false);
-            }
-          }}
-          className="text-white w-14 aspect-square rounded-full flex items-center justify-center text-lg font-semibold bg-green-600 hover:bg-[var(--amber)] transition-all duration-100 shadow-md select-none touch-manipulation"
-        >
-          {showChat ? '✕' : '🗯️'}
-        </button>
+        {hasPainted ? (
+          <Television
+            isMuted={isMuted}
+            src={current.type === "vod" ? current.src : undefined}
+          >
+            {current.type === "live" && playbackId ? (
+              <div className="flex flex-col justify-center items-center h-screen md:h-auto md:block">
+                <Live playbackId={playbackId} isMuted={isMuted} />
+              </div>
+            ) : null}
+          </Television>
+        ) : (
+          <div className="fixed top-0 left-0 w-screen h-screen -z-10 overflow-hidden bg-[#111]" />
+        )}
         <NewClicker
           switchChannelUp={switchChannel}
           switchChannelDown={switchChannelDown}
@@ -346,7 +300,8 @@ export default function Home() {
         />
       </div>
       <div className="pointer-events-none fixed inset-0 z-[10010]">
-        {remoteCursors.map((other) => {
+        {hasPainted &&
+          remoteCursors.map((other) => {
           const cursor = other.presence.cursor;
 
           if (!cursor) {

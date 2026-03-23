@@ -1,12 +1,24 @@
 "use client";
+import dynamic from "next/dynamic";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { StyledConnectKitButton } from "./ui/StyledConnectKitButton";
 import { useMinimize } from "./providers/MinimizeMenus";
 import Logo from "./ui/Logo";
 import { useToggle } from "./providers/ToggleContext";
-import BrandMenu from "./BrandMenu";
+
+const BrandMenu = dynamic(() => import("./BrandMenu"));
+const StyledConnectKitButton = dynamic(
+  () =>
+    import("./ui/StyledConnectKitButton").then((module) => module.StyledConnectKitButton),
+  {
+    loading: () => (
+      <div className="w-full max-w-xs mx-auto block bg-[var(--lghtgrey)] text-black py-2 px-3 mx-2 text-xs uppercase opacity-60">
+        Loading
+      </div>
+    ),
+  },
+);
 
 export default function Navigation() {
   const { minimized } = useMinimize();
@@ -14,8 +26,6 @@ export default function Navigation() {
     useToggle();
 
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
-
   const pathname = usePathname();
   const isHome = pathname === "/";
 
@@ -75,11 +85,7 @@ export default function Navigation() {
                 Manifesto
               </button>
 
-              <div
-                className="relative"
-                onMouseEnter={() => setShowDropdown(true)}
-                onMouseLeave={() => setShowDropdown(false)}
-              >
+              <div className="group relative">
                 <button
                   className="w-full max-w-xs mx-auto block bg-[orange] text-black py-2 px-3 transition-colors hover:bg-[green] hover:text-white m-2 text-xs uppercase"
                   onClick={togglePermapool}
@@ -87,8 +93,8 @@ export default function Navigation() {
                   Permapool
                 </button>
 
-                {showDropdown && (
-                  <div className="absolute right-0 mt-[-2px] bg-white border border-black shadow-lg z-50 p-2">
+                <div className="pointer-events-none absolute right-0 z-50 opacity-0 transition-opacity duration-150 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100">
+                  <div className="bg-white border border-black shadow-lg">
                     <button
                       className="block w-full text-left px-3 py-2 text-xs uppercase bg-white text-black hover:bg-[green] hover:text-white"
                       onClick={toggleSquad}
@@ -102,7 +108,7 @@ export default function Navigation() {
                       Proposals
                     </button>
                   </div>
-                )}
+                </div>
               </div>
 
               <Link

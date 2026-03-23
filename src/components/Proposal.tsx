@@ -13,6 +13,7 @@ import { switchChain } from '@wagmi/core'
 import { governanceAbi, governanceAddress } from "~/constants/abi-governance";
 import { ProposalData, getNullAddress } from "~/lib/data";
 import { config } from '~/components/providers/WagmiProvider';
+import { useRequireWallet } from "~/lib/auth/useRequireWallet";
 
 const statusStyles: Record<string, string> = {
   "You Voted":
@@ -35,6 +36,7 @@ function StatusBadge({ status }: { status: string }) {
 
 export default function ProposalList({ proposal, isMember }: { proposal: ProposalData, isMember: boolean }) {
   const account = useAccount();
+  const requireWallet = useRequireWallet();
 
   const [voting, setVoting] = useState(false);
   const [cacheBust, setCacheBust] = useState(0);
@@ -68,6 +70,10 @@ export default function ProposalList({ proposal, isMember }: { proposal: Proposa
   const expired = now > proposal.expiration;
 
   const vote = async () => {
+    if (!(await requireWallet())) {
+      return;
+    }
+
     setVoting(true);
     if (account.chainId != base.id) {
       await switchChain(config, { chainId: base.id });
