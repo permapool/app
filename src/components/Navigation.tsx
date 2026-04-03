@@ -8,9 +8,8 @@ import Logo from "./ui/Logo";
 import { useToggle } from "./providers/ToggleContext";
 
 const BrandMenu = dynamic(() => import("./BrandMenu"));
-const StyledConnectKitButton = dynamic(
-  () =>
-    import("./ui/StyledConnectKitButton").then((module) => module.StyledConnectKitButton),
+const NavAuthButton = dynamic(
+  () => import("./ui/NavAuthButton"),
   {
     loading: () => (
       <div className="w-full max-w-xs mx-auto block bg-[var(--lghtgrey)] text-black py-2 px-3 mx-2 text-xs uppercase opacity-60">
@@ -168,7 +167,7 @@ export default function Navigation() {
             </button>
           </div>
 
-          <StyledConnectKitButton />
+          <NavAuthButton />
         </div>
       </div>
 

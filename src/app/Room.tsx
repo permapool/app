@@ -6,6 +6,7 @@ import {
   RoomProvider,
   ClientSideSuspense,
 } from "@liveblocks/react/suspense";
+import Loading from "~/components/ui/Loading";
 
 const publicApiKey =
   process.env.NEXT_PUBLIC_LIVEBLOCKS_PUBLIC_KEY;
@@ -26,13 +27,13 @@ export function Room({ children }: { children: ReactNode }) {
   }, []);
 
   if (!enabled) {
-    return <div>Triangulating</div>;
+    return <Loading label="Loading room..." />;
   }
 
   return (
     <LiveblocksProvider publicApiKey={publicApiKey}>
-      <RoomProvider id="home-page" initialPresence={{ cursor: null }}>
-        <ClientSideSuspense fallback={<div>Triangulating</div>}>
+      <RoomProvider id="home-page" initialPresence={{ active: true }}>
+        <ClientSideSuspense fallback={<Loading label="Loading room..." />}>
           {children}
         </ClientSideSuspense>
       </RoomProvider>

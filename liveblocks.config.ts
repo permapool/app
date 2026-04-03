@@ -4,7 +4,7 @@ declare global {
   interface Liveblocks {
     // Each user's Presence, for useMyPresence, useOthers, etc.
     Presence: {
-      cursor: { x: number; y: number } | null;
+      active: boolean;
     };
 
     // The Storage tree for the room, for useMutation, useStorage, etc.
@@ -24,10 +24,15 @@ declare global {
     };
 
     // Custom events, for useBroadcastEvent, useEventListener
-    RoomEvent: {};
-      // Example has two events, using a union
-      // | { type: "PLAY" } 
-      // | { type: "REACTION"; emoji: "🔥" };
+    RoomEvent:
+      | {
+          type: "chat_message_created";
+          message: import("~/lib/chat/types").ChatMessagePayload;
+        }
+      | {
+          type: "chat_reaction_toggled";
+          message: import("~/lib/chat/types").ChatMessagePayload;
+        };
 
     // Custom metadata set on threads, for useThreads, useCreateThread, etc.
     ThreadMetadata: {

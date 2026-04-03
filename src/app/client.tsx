@@ -1,7 +1,6 @@
 'use client';
 
 import dynamic from "next/dynamic";
-import PrivyAuthProvider from "~/components/providers/PrivyAuthProvider";
 import { MinimizeMenusProvider } from "~/components/providers/MinimizeMenus";
 import { ToggleProvider } from "~/components/providers/ToggleContext";
 
@@ -15,13 +14,11 @@ export default function Client({
   children: React.ReactNode;
 }>) {
   return (
-    <PrivyAuthProvider>
-      <MinimizeMenusProvider>
-        <ToggleProvider>
-          <Navigation />
-          {children}
-        </ToggleProvider>
-      </MinimizeMenusProvider>
-    </PrivyAuthProvider>
+    <MinimizeMenusProvider>
+      <ToggleProvider>
+        <Navigation />
+        {children}
+      </ToggleProvider>
+    </MinimizeMenusProvider>
   );
 }

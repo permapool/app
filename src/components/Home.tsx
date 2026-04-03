@@ -1,10 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
 import { useEffect, useState, useRef, useCallback } from "react";
-import {
-  useOthers,
-  useUpdateMyPresence,
-} from "@liveblocks/react/suspense";
 
 import sdk, { Context } from "@farcaster/frame-sdk";
 import { motion, AnimatePresence } from "framer-motion";
@@ -30,6 +26,9 @@ const Manifesto = dynamic(() => import("./Manifesto"), {
 });
 const Television = dynamic(() => import("./Television"));
 const Live = dynamic(() => import("./Live"));
+const Chat = dynamic(() => import("./ui/Chat"), {
+  ssr: false,
+});
 
 type VodChannel = { type: "vod"; src: string };
 type LiveChannel = { type: "live" };
@@ -47,9 +46,6 @@ const channels: Channel[] = [
 const ENABLE_TOAST = false;
 
 export default function Home() {
-  const updateMyPresence = useUpdateMyPresence();
-  const others = useOthers();
-  const remoteCursors = others.filter((other) => other.presence.cursor !== null);
   const [hasPainted, setHasPainted] = useState(false);
 
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
@@ -138,59 +134,6 @@ export default function Home() {
 
     return () => clearTimeout(timer);
   }, []);
-
-  useEffect(() => {
-    if (!hasPainted) {
-      return;
-    }
-
-    let frame: number | null = null;
-
-    const clearCursor = () => {
-      if (frame !== null) {
-        cancelAnimationFrame(frame);
-        frame = null;
-      }
-
-      updateMyPresence({ cursor: null });
-    };
-
-    const handlePointerMove = (event: PointerEvent) => {
-      if (frame !== null) {
-        cancelAnimationFrame(frame);
-      }
-
-      frame = window.requestAnimationFrame(() => {
-        updateMyPresence({
-          cursor: { x: event.clientX, y: event.clientY },
-        });
-        frame = null;
-      });
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        clearCursor();
-      }
-    };
-
-    window.addEventListener("pointermove", handlePointerMove);
-    window.addEventListener("blur", clearCursor);
-    document.addEventListener("mouseleave", clearCursor);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      if (frame !== null) {
-        cancelAnimationFrame(frame);
-      }
-
-      window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("blur", clearCursor);
-      document.removeEventListener("mouseleave", clearCursor);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      updateMyPresence({ cursor: null });
-    };
-  }, [hasPainted, updateMyPresence]);
 
   return (
     <>
@@ -299,40 +242,7 @@ export default function Home() {
           toggleMute={toggleMute}
         />
       </div>
-      <div className="pointer-events-none fixed inset-0 z-[10010]">
-        {hasPainted &&
-          remoteCursors.map((other) => {
-          const cursor = other.presence.cursor;
-
-          if (!cursor) {
-            return null;
-          }
-
-          return (
-            <div
-              key={other.connectionId}
-              className="absolute"
-              style={{
-                transform: `translate(${cursor.x}px, ${cursor.y}px)`,
-              }}
-            >
-              <div className="relative">
-                <div
-                  className="h-0 w-0"
-                  style={{
-                    borderTop: "10px solid green",
-                    borderRight: "10px solid green",
-                    borderRadius: "50%",
-                  }}
-                />
-                <div className="absolute left-3 top-3 bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-black shadow-solid">
-                  anon {other.connectionId}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <Chat />
       <div
         aria-hidden="true"
         className="pointer-events-none fixed bottom-0 right-0 z-[10020] h-16 w-40 bg-black"

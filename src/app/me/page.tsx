@@ -3,12 +3,13 @@
 import { FormEvent, useMemo, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { useAuth } from "~/components/providers/AuthProvider";
+import PrivyAuthProvider from "~/components/providers/PrivyAuthProvider";
 
 function shortenAddress(address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
-export default function MePage() {
+function MePageContent() {
   const { user, loading } = useAuth();
   const { getAccessToken, linkWallet } = usePrivy();
   const [username, setUsername] = useState("");
@@ -144,5 +145,13 @@ export default function MePage() {
         {error ? <div>{error}</div> : null}
       </section>
     </main>
+  );
+}
+
+export default function MePage() {
+  return (
+    <PrivyAuthProvider>
+      <MePageContent />
+    </PrivyAuthProvider>
   );
 }
