@@ -44,7 +44,7 @@ export default function ChatFeed({
     <div className="relative mt-3">
       <div
         ref={feedRef}
-        className="max-h-[240px] min-h-[180px] overflow-y-auto px-3 py-2"
+        className="max-h-[69vh] min-h-[180px] max-w-[400px] overflow-y-auto py-3"
       >
         {loading ? (
           <div className="py-10 text-center text-[11px] uppercase tracking-[0.14em] text-green/50">
@@ -65,7 +65,7 @@ export default function ChatFeed({
               return (
                 <div
                   key={message.id}
-                  className="px-2 py-1.5 transition-opacity bg-white/10 backdrop-blur-sm w-fit"
+                  className="px-2 py-1.5 transition-opacity bg-white/30 backdrop-blur-sm w-fit"
                   style={rowStyle}
                 >
                   <div className="flex items-baseline justify-between gap-2 text-[10px] uppercase tracking-[0.14em] text-black/55">
@@ -84,7 +84,7 @@ export default function ChatFeed({
                     {message.content}
                   </p>
 
-                  <div className="mt-2 flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-1">
                     {CHAT_REACTION_TYPES.map((reactionType) => {
                       const isActive = message.viewerReactions[reactionType];
                       const count = message.reactions[reactionType];
@@ -94,7 +94,7 @@ export default function ChatFeed({
                         <button
                           key={`${message.id}-${reactionType}`}
                           type="button"
-                          className={`min-w-[38px] border px-2 py-1 text-[11px] ${
+                          className={`w-fit border px-2 py-1 text-[11px] rounded-full ${
                             isActive
                               ? "border-black bg-black text-white"
                               : "border-black/20 bg-white/70 text-black"

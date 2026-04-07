@@ -153,7 +153,7 @@ export default function Navigation() {
           )}
         </div>
 
-        <div className="flex items-center gap-2 md:gap-6 ml-2 md:ml-10">
+        <div className="flex items-center gap-2 md:gap-3 ml-2 md:ml-1">
           <div className="md:hidden">
             <button
               type="button"
