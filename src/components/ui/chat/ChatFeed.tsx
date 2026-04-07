@@ -44,7 +44,7 @@ export default function ChatFeed({
     <div className="relative mt-3">
       <div
         ref={feedRef}
-        className="max-h-[240px] min-h-[180px] overflow-y-auto border border-black/10 px-3 py-2"
+        className="max-h-[240px] min-h-[180px] overflow-y-auto px-3 py-2"
       >
         {loading ? (
           <div className="py-10 text-center text-[11px] uppercase tracking-[0.14em] text-green/50">
@@ -65,7 +65,7 @@ export default function ChatFeed({
               return (
                 <div
                   key={message.id}
-                  className="px-2 py-1.5 transition-opacity backdrop-blur-sm"
+                  className="px-2 py-1.5 transition-opacity bg-white/10 backdrop-blur-sm w-fit"
                   style={rowStyle}
                 >
                   <div className="flex items-baseline justify-between gap-2 text-[10px] uppercase tracking-[0.14em] text-black/55">

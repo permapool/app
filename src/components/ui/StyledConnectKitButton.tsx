@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { DoorOpenIcon, UserCircleIcon } from "@phosphor-icons/react";
 import { usePrivy } from "@privy-io/react-auth";
 import { useAuth } from "~/components/providers/AuthProvider";
 
@@ -12,18 +13,10 @@ export const StyledConnectKitButton = () => {
   const { ready, authenticated, login, logout } = usePrivy();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
-
-  const label = (() => {
-    if (!ready || loading) {
-      return "LOADING";
-    }
-
-    if (!authenticated) {
-      return "LOGIN";
-    }
-
-    return user?.username ?? user?.email ?? truncateAddress(user?.wallets[0]?.address ?? "");
-  })();
+  const profileLabel =
+    user?.username ??
+    user?.email ??
+    truncateAddress(user?.wallets[0]?.address ?? "");
 
   useEffect(() => {
     if (!menuOpen) {
@@ -66,7 +59,11 @@ export const StyledConnectKitButton = () => {
     >
       <button
         type="button"
-        className="w-full max-w-xs mx-auto block bg-[var(--lghtgrey)] text-black py-2 px-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#7C65C1] hover:bg-[green] hover:text-white mx-2 text-xs uppercase"
+        className={`mx-2 flex h-8 w-8 items-center justify-center rounded-full border border-black p-0 transition-colors ${
+          authenticated
+            ? "bg-black text-[var(--background)] hover:bg-[var(--amber)] hover:text-black"
+            : "bg-[var(--green)] text-[var(--background)] hover:bg-[var(--amber)] hover:text-black"
+        } disabled:cursor-not-allowed disabled:bg-[var(--lghtgrey)] disabled:text-[var(--grey)]`}
         onClick={() => void handleClick()}
         onFocus={() => {
           if (authenticated) {
@@ -74,15 +71,33 @@ export const StyledConnectKitButton = () => {
           }
         }}
         disabled={!ready}
+        aria-label={
+          !ready || loading
+            ? "Loading account controls"
+            : authenticated
+              ? `Open account menu for ${profileLabel}`
+              : "Log in"
+        }
+        title={
+          authenticated
+            ? profileLabel
+            : !ready || loading
+              ? "Loading"
+              : "Login"
+        }
       >
-        <span className="relative z-20 bg-gradient-to-b from-[#252424] to-[#3C3C3C] bg-clip-text text-transparent hover:text-white">
-          {label}
-        </span>
+        {!ready || loading ? (
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+        ) : authenticated ? (
+          <UserCircleIcon size={15} weight="fill" />
+        ) : (
+          <DoorOpenIcon size={15} weight="bold" />
+        )}
       </button>
 
       {authenticated && menuOpen ? (
         <div className="absolute right-0 mt-[-2px] z-50 p-2">
-          <div className="min-w-32 bg-white border border-black shadow-lg">
+          <div className="min-w-32 bg-white border border-black">
             <Link
               href="/me"
               className="block px-3 py-2 text-xs uppercase bg-white text-black hover:bg-[green] hover:text-white"
