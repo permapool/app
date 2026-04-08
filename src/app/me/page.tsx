@@ -85,6 +85,34 @@ function MePageContent() {
       </section>
 
       <section className="space-y-2">
+        <h2>Roles</h2>
+        <div className="flex gap-2 flex-wrap">
+          {user.roles.map((role) => (
+            <span key={role.id} className="border px-2 py-1 text-xs">
+              {role.name}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-2">
+        <h2>Update username</h2>
+        <form onSubmit={handleSubmit} className="flex gap-2 items-center">
+          <input
+            type="text"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            placeholder="new username"
+            className="border px-2 py-1"
+          />
+          <button type="submit" disabled={submitting} className="border px-3 py-1">
+            {submitting ? "Saving..." : "Save"}
+          </button>
+        </form>
+        {error ? <div>{error}</div> : null}
+      </section>
+
+      <section className="space-y-2">
         <h2>Wallets</h2>
         {user.wallets.length === 0 ? (
           <div className="space-y-2">
@@ -117,33 +145,7 @@ function MePageContent() {
         )}
       </section>
 
-      <section className="space-y-2">
-        <h2>Roles</h2>
-        <div className="flex gap-2 flex-wrap">
-          {user.roles.map((role) => (
-            <span key={role.id} className="border px-2 py-1 text-xs">
-              {role.name}
-            </span>
-          ))}
-        </div>
-      </section>
-
-      <section className="space-y-2">
-        <h2>Update username</h2>
-        <form onSubmit={handleSubmit} className="flex gap-2 items-center">
-          <input
-            type="text"
-            value={username}
-            onChange={(event) => setUsername(event.target.value)}
-            placeholder="new username"
-            className="border px-2 py-1"
-          />
-          <button type="submit" disabled={submitting} className="border px-3 py-1">
-            {submitting ? "Saving..." : "Save"}
-          </button>
-        </form>
-        {error ? <div>{error}</div> : null}
-      </section>
+      
     </main>
   );
 }

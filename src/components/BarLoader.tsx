@@ -1,14 +1,23 @@
-'use client';
+"use client";
 
-import * as React from 'react';
+import * as React from "react";
 
-interface BarLoaderProps {
+type BarLoaderProps = {
+  className?: string;
+  fillClassName?: string;
   intervalRate?: number;
   progress?: number;
-}
+  trackClassName?: string;
+};
 
-const BarLoader: React.FC<BarLoaderProps> = ({ intervalRate, progress }) => {
-  const [currentProgress, setCurrentProgress] = React.useState<number>(progress || 0);
+const BarLoader: React.FC<BarLoaderProps> = ({
+  className = "",
+  fillClassName = "bg-gradient-to-r from-[var(--green)] to-[var(--green)]",
+  intervalRate,
+  progress,
+  trackClassName = "bg-black/10",
+}) => {
+  const [currentProgress, setCurrentProgress] = React.useState<number>(progress ?? 0);
 
   React.useEffect(() => {
     if (progress !== undefined) {
@@ -26,9 +35,11 @@ const BarLoader: React.FC<BarLoaderProps> = ({ intervalRate, progress }) => {
   }, [intervalRate, progress]);
 
   return (
-    <div className="bg-[var(--theme-border)] h-[calc(var(--font-size)*var(--theme-line-height-base))] whitespace-nowrap text-left align-bottom block">
+    <div
+      className={`block h-full min-h-[5px] w-full overflow-hidden whitespace-nowrap text-left align-bottom ${trackClassName} ${className}`}
+    >
       <div
-        className="h-full w-0 transition-[width] duration-100 ease-linear bg-[linear-gradient(to_right,transparent,var(--theme-text))]"
+        className={`h-full w-0 transition-[width] duration-100 ease-linear ${fillClassName}`}
         style={{
           width: `${Math.min(currentProgress, 100)}%`,
         }}

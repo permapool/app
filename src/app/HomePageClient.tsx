@@ -1,11 +1,11 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import BarLoader from "~/components/BarLoader";
+import HomeInitialLoader from "~/components/HomeInitialLoader";
 
 const HomeScreen = dynamic(() => import("~/components/HomeScreen"), {
   ssr: false,
-  loading: () => <BarLoader intervalRate={100} progress={0} />,
+  loading: () => <HomeInitialLoader />,
 });
 
 export default function HomePageClient() {

@@ -6,7 +6,7 @@ import {
   RoomProvider,
   ClientSideSuspense,
 } from "@liveblocks/react/suspense";
-import Loading from "~/components/ui/Loading";
+import BarLoader from "~/components/BarLoader";
 
 const publicApiKey =
   process.env.NEXT_PUBLIC_LIVEBLOCKS_PUBLIC_KEY;
@@ -27,13 +27,27 @@ export function Room({ children }: { children: ReactNode }) {
   }, []);
 
   if (!enabled) {
-    return <Loading label="Loading room..." />;
+    return (
+      <div className="flex min-h-[20px] items-center justify-center px-4">
+        <div className="w-full max-w-[320px]">
+          <BarLoader intervalRate={300} />
+        </div>
+      </div>
+    );
   }
 
   return (
     <LiveblocksProvider publicApiKey={publicApiKey}>
       <RoomProvider id="home-page" initialPresence={{ active: true }}>
-        <ClientSideSuspense fallback={<Loading label="Loading room..." />}>
+        <ClientSideSuspense
+          fallback={
+            <div className="flex min-h-[20px] items-center justify-center px-4">
+              <div className="h-[5px] w-[33vw] max-w-[420px] min-w-[180px]">
+                <BarLoader intervalRate={300} />
+              </div>
+            </div>
+          }
+        >
           {children}
         </ClientSideSuspense>
       </RoomProvider>

@@ -136,7 +136,7 @@ export default function CalendarContent() {
   if (loading) {
     return (
       <div className="w-full h-8">
-        <BarLoader intervalRate={100} />
+        <BarLoader intervalRate={300} />
       </div>
     );
   }

@@ -61,7 +61,7 @@ export const StyledConnectKitButton = () => {
         type="button"
         className={`mx-2 flex h-8 w-8 items-center justify-center rounded-full border border-black p-0 transition-colors ${
           authenticated
-            ? "bg-black text-[var(--background)] hover:bg-[var(--amber)] hover:text-black"
+            ? "bg-[var(--lghtgrey)] text-black hover:bg-[var(--amber)]"
             : "bg-[var(--green)] text-[var(--background)] hover:bg-[var(--amber)] hover:text-black"
         } disabled:cursor-not-allowed disabled:bg-[var(--lghtgrey)] disabled:text-[var(--grey)]`}
         onClick={() => void handleClick()}

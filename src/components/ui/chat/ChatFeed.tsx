@@ -1,6 +1,7 @@
 "use client";
 
 import type { CSSProperties, MutableRefObject } from "react";
+import BarLoader from "~/components/BarLoader";
 import { CHAT_REACTION_TYPES, CHAT_VISIBILITY_WINDOW_MS, type ChatReactionType } from "~/lib/chat/constants";
 import type { ChatMessagePayload } from "~/lib/chat/types";
 
@@ -47,8 +48,10 @@ export default function ChatFeed({
         className="max-h-[69vh] min-h-[180px] max-w-[400px] overflow-y-auto py-3"
       >
         {loading ? (
-          <div className="py-10 text-center text-[11px] uppercase tracking-[0.14em] text-green/50">
-            Loading chat...
+          <div className="flex min-h-[60px] items-center justify-center py-10">
+            <div className="h-[5px] w-full">
+              <BarLoader intervalRate={300} />
+            </div>
           </div>
         ) : messages.length === 0 ? (
           <div className="py-10 text-center text-[11px] uppercase tracking-[0.14em] text-green/50">
