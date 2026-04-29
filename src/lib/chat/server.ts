@@ -232,6 +232,7 @@ export async function createChatMessage({
   const session = await getOrCreateGlobalChatSession();
   const now = new Date();
   const cooldownStart = new Date(now.getTime() - CHAT_MESSAGE_COOLDOWN_MS);
+  const shouldApplyCooldown = trimmedContent.length > 1;
 
   const previousMessage = await prisma.chatMessage.findFirst({
     where: {
@@ -245,7 +246,7 @@ export async function createChatMessage({
     },
   });
 
-  if (previousMessage && previousMessage.createdAt > cooldownStart) {
+  if (shouldApplyCooldown && previousMessage && previousMessage.createdAt > cooldownStart) {
     if (previousMessage.content.trim() === trimmedContent) {
       throw new ChatApiError(409, "Duplicate messages are blocked for a few seconds");
     }

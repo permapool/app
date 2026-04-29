@@ -2,7 +2,7 @@
 
 import { ChatCenteredDotsIcon, XIcon } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CHAT_MESSAGE_MAX_LENGTH } from "~/lib/chat/constants";
 
 type ChatComposerProps = {
@@ -28,7 +28,6 @@ export default function ChatComposer({
 }: ChatComposerProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [canSubmitWithEnter, setCanSubmitWithEnter] = useState(false);
-  const helperTextId = useId();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const isComposingRef = useRef(false);
   const toggleExpanded = () => setIsExpanded((current) => !current);
@@ -153,7 +152,7 @@ export default function ChatComposer({
                 onKeyDown={handleTextareaKeyDown}
                 maxLength={CHAT_MESSAGE_MAX_LENGTH}
                 rows={1}
-                aria-describedby={helperTextId}
+                aria-label="Chat message. Press Enter to send on desktop or Shift Enter for a newline."
                 placeholder={
                   authenticated ? "Send a message" : "Type now, log in on send"
                 }
@@ -179,7 +178,6 @@ export default function ChatComposer({
               <span>
                 {composerValue.trim().length}/{CHAT_MESSAGE_MAX_LENGTH}
               </span>
-              <span id={helperTextId}>Enter to send · Shift+Enter for newline</span>
               {error ? (
                 <motion.span
                   key={error}
