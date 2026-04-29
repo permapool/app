@@ -55,6 +55,7 @@ export default function Chat() {
   const initialFeedReadyRef = useRef(false);
   const previousMessageCountRef = useRef(0);
   const lastFetchClientTimestampRef = useRef<number | null>(null);
+  const sendInFlightRef = useRef(false);
 
   const [messages, setMessages] = useState<ChatMessagePayload[]>([]);
   const [composerValue, setComposerValue] = useState("");
@@ -222,28 +223,34 @@ export default function Chat() {
   };
 
   const sendMessage = async () => {
-    if (!composerValue.trim()) {
-      setError("Say something first");
+    if (sending || sendInFlightRef.current) {
       return;
     }
 
-    if (!authenticated) {
-      setError("Log in to send");
-      await promptLogin();
-      return;
-    }
-
-    const accessToken = await getAccessToken();
-
-    if (!accessToken) {
-      setError("Unable to verify your session");
-      return;
-    }
-
-    setSending(true);
-    setError(null);
+    sendInFlightRef.current = true;
 
     try {
+      if (!composerValue.trim()) {
+        setError("Say something first");
+        return;
+      }
+
+      if (!authenticated) {
+        setError("Log in to send");
+        await promptLogin();
+        return;
+      }
+
+      const accessToken = await getAccessToken();
+
+      if (!accessToken) {
+        setError("Unable to verify your session");
+        return;
+      }
+
+      setSending(true);
+      setError(null);
+
       const response = await fetch("/api/chat/messages", {
         method: "POST",
         headers: {
@@ -267,6 +274,7 @@ export default function Chat() {
     } catch (sendError) {
       setError(sendError instanceof Error ? sendError.message : "Unable to send message");
     } finally {
+      sendInFlightRef.current = false;
       setSending(false);
     }
   };
@@ -359,9 +367,7 @@ export default function Chat() {
         sending={sending}
         signedInLabel={signedInLabel}
         onComposerChange={setComposerValue}
-        onSend={() => {
-          void sendMessage();
-        }}
+        onSend={sendMessage}
       />
       </div>
     </div>

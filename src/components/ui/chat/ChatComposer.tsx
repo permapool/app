@@ -2,7 +2,7 @@
 
 import { ChatCenteredDotsIcon, XIcon } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { CHAT_MESSAGE_MAX_LENGTH } from "~/lib/chat/constants";
 
 type ChatComposerProps = {
@@ -13,7 +13,7 @@ type ChatComposerProps = {
   sending: boolean;
   signedInLabel: string | null;
   onComposerChange: (value: string) => void;
-  onSend: () => void;
+  onSend: () => Promise<void> | void;
 };
 
 export default function ChatComposer({
@@ -27,7 +27,10 @@ export default function ChatComposer({
   onSend,
 }: ChatComposerProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [canSubmitWithEnter, setCanSubmitWithEnter] = useState(false);
+  const helperTextId = useId();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const isComposingRef = useRef(false);
   const toggleExpanded = () => setIsExpanded((current) => !current);
 
   const syncTextareaHeight = () => {
@@ -37,6 +40,21 @@ export default function ChatComposer({
 
     textareaRef.current.style.height = "0px";
     textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+  };
+
+  const focusTextarea = () => {
+    window.requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+    });
+  };
+
+  const submitAndRefocus = async () => {
+    if (sending || !ready) {
+      return;
+    }
+
+    await onSend();
+    focusTextarea();
   };
 
   useEffect(() => {
@@ -53,6 +71,32 @@ export default function ChatComposer({
   }, [isExpanded]);
 
   useEffect(() => {
+    const coarsePointerQuery = window.matchMedia("(pointer: coarse)");
+    const updateCanSubmitWithEnter = () => {
+      setCanSubmitWithEnter(!coarsePointerQuery.matches);
+    };
+
+    updateCanSubmitWithEnter();
+
+    if (coarsePointerQuery.addEventListener) {
+      coarsePointerQuery.addEventListener("change", updateCanSubmitWithEnter);
+
+      return () => {
+        coarsePointerQuery.removeEventListener(
+          "change",
+          updateCanSubmitWithEnter,
+        );
+      };
+    }
+
+    coarsePointerQuery.addListener(updateCanSubmitWithEnter);
+
+    return () => {
+      coarsePointerQuery.removeListener(updateCanSubmitWithEnter);
+    };
+  }, []);
+
+  useEffect(() => {
     if (composerValue.trim()) {
       setIsExpanded(true);
     }
@@ -65,6 +109,23 @@ export default function ChatComposer({
 
     syncTextareaHeight();
   }, [composerValue, isExpanded]);
+
+  const handleTextareaKeyDown = (
+    event: React.KeyboardEvent<HTMLTextAreaElement>,
+  ) => {
+    if (
+      event.key !== "Enter" ||
+      event.shiftKey ||
+      !canSubmitWithEnter ||
+      event.nativeEvent.isComposing ||
+      isComposingRef.current
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    void submitAndRefocus();
+  };
 
   return (
     <div className="relative mt-3 h-12 w-full max-w-[340px]">
@@ -83,8 +144,16 @@ export default function ChatComposer({
                 ref={textareaRef}
                 value={composerValue}
                 onChange={(event) => onComposerChange(event.target.value)}
+                onCompositionStart={() => {
+                  isComposingRef.current = true;
+                }}
+                onCompositionEnd={() => {
+                  isComposingRef.current = false;
+                }}
+                onKeyDown={handleTextareaKeyDown}
                 maxLength={CHAT_MESSAGE_MAX_LENGTH}
                 rows={1}
+                aria-describedby={helperTextId}
                 placeholder={
                   authenticated ? "Send a message" : "Type now, log in on send"
                 }
@@ -94,7 +163,9 @@ export default function ChatComposer({
                 type="button"
                 className="shrink-0 border border-black bg-black px-3 py-2 h-fit text-[10px] uppercase text-white transition-colors hover:bg-[var(--green)]"
                 disabled={sending || !ready}
-                onClick={onSend}
+                onClick={() => {
+                  void submitAndRefocus();
+                }}
               >
                 {sending ? "Sending" : authenticated ? "Send" : "Login + Send"}
               </button>
@@ -108,6 +179,7 @@ export default function ChatComposer({
               <span>
                 {composerValue.trim().length}/{CHAT_MESSAGE_MAX_LENGTH}
               </span>
+              <span id={helperTextId}>Enter to send · Shift+Enter for newline</span>
               {error ? (
                 <motion.span
                   key={error}
