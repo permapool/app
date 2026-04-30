@@ -11,9 +11,10 @@ import type { AppUser } from "~/types/auth";
 
 const BASE_CHAIN_ID = 8453;
 const USER_SYNC_ATTEMPTS = 5;
+const mainnetRpcUrl = process.env.MAINNET_JSON_RPC_URL?.trim();
 const ensClient = createPublicClient({
   chain: mainnet,
-  transport: http(),
+  transport: mainnetRpcUrl ? http(mainnetRpcUrl) : http(),
 });
 
 async function resolveEnsName(address: string) {
