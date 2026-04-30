@@ -63,7 +63,7 @@ export default function Navigation() {
 
   return (
     <div
-      className={`fixed z-50 m-3 w-[98%] bg-white shadow-solid border border-[1px] border-black transition-opacity duration-700 ${
+      className={`fixed z-[10030] mx-3 mb-3 mt-10 w-[98%] bg-white shadow-solid border border-[1px] border-black transition-opacity duration-700 md:mt-3 ${
         visible ? "opacity-100" : "opacity-0"
       }`}
     >
@@ -171,6 +171,7 @@ export default function Navigation() {
                   alt=""
                   width={18}
                   height={18}
+                  className="brightness-0 invert"
                 />
               </button>
             </div>
