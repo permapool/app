@@ -1,9 +1,11 @@
 "use client";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMinimize } from "./providers/MinimizeMenus";
+import { useMute } from "./providers/MuteContext";
 import Logo from "./ui/Logo";
 import { useToggle } from "./providers/ToggleContext";
 
@@ -21,6 +23,7 @@ const NavAuthButton = dynamic(
 
 export default function Navigation() {
   const { minimized } = useMinimize();
+  const { isMuted, toggleMute } = useMute();
   const { toggleManifesto, togglePermapool, toggleSquad, toggleProposals } =
     useToggle();
 
@@ -154,6 +157,24 @@ export default function Navigation() {
         </div>
 
         <div className="flex items-center gap-2 md:gap-3 ml-2 md:ml-1">
+          {isHome ? (
+            <div className="md:hidden flex items-center">
+              <button
+                type="button"
+                aria-label={isMuted ? "Unmute audio" : "Mute audio"}
+                aria-pressed={isMuted}
+                onClick={toggleMute}
+                className="bg-black text-white px-3 py-2 h-full flex items-center justify-center border border-black hover:bg-[green] transition-colors"
+              >
+                <Image
+                  src={isMuted ? "/icons/sound-off.svg" : "/icons/sound-on.svg"}
+                  alt=""
+                  width={18}
+                  height={18}
+                />
+              </button>
+            </div>
+          ) : null}
           <div className="md:hidden">
             <button
               type="button"

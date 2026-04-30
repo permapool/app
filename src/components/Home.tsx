@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import NewClicker from "./ui/NewClicker";
 
 import { useMinimize } from "./providers/MinimizeMenus";
+import { useMute } from "./providers/MuteContext";
 import { useToggle } from "./providers/ToggleContext";
 
 import Toaster, { ToasterRef } from "./ui/Toast";
@@ -104,8 +105,7 @@ export default function Home() {
     }
   }, []);
 
-  const [isMuted, setIsMuted] = useState(true);
-  const toggleMute = () => setIsMuted((m) => !m);
+  const { isMuted, toggleMute } = useMute();
 
   useMinimize();
 

@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { MinimizeMenusProvider } from "~/components/providers/MinimizeMenus";
+import { MuteProvider } from "~/components/providers/MuteContext";
 import { ToggleProvider } from "~/components/providers/ToggleContext";
 
 const Navigation = dynamic(() => import("~/components/Navigation"), {
@@ -16,8 +17,10 @@ export default function Client({
   return (
     <MinimizeMenusProvider>
       <ToggleProvider>
-        <Navigation />
-        {children}
+        <MuteProvider>
+          <Navigation />
+          {children}
+        </MuteProvider>
       </ToggleProvider>
     </MinimizeMenusProvider>
   );
