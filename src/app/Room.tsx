@@ -1,5 +1,6 @@
 "use client";
 
+import { usePrivy } from "@privy-io/react-auth";
 import { ReactNode, useEffect, useState } from "react";
 import {
   LiveblocksProvider,
@@ -8,14 +9,8 @@ import {
 } from "@liveblocks/react/suspense";
 import BarLoader from "~/components/BarLoader";
 
-const publicApiKey =
-  process.env.NEXT_PUBLIC_LIVEBLOCKS_PUBLIC_KEY;
-
 export function Room({ children }: { children: ReactNode }) {
-  if (!publicApiKey) {
-    throw new Error("Missing NEXT_PUBLIC_LIVEBLOCKS_PUBLIC_KEY");
-  }
-
+  const { ready, authenticated, getAccessToken } = usePrivy();
   const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
@@ -26,7 +21,7 @@ export function Room({ children }: { children: ReactNode }) {
     return () => window.cancelAnimationFrame(frame);
   }, []);
 
-  if (!enabled) {
+  if (!enabled || !ready) {
     return (
       <div className="flex min-h-[20px] items-center justify-center px-4">
         <div className="w-full max-w-[320px]">
@@ -37,8 +32,48 @@ export function Room({ children }: { children: ReactNode }) {
   }
 
   return (
-    <LiveblocksProvider publicApiKey={publicApiKey}>
-      <RoomProvider id="home-page" initialPresence={{ active: true }}>
+    <LiveblocksProvider
+      authEndpoint={async (room) => {
+        const headers: HeadersInit = {
+          "Content-Type": "application/json",
+        };
+
+        if (authenticated) {
+          const accessToken = await getAccessToken();
+
+          if (accessToken) {
+            headers.Authorization = `Bearer ${accessToken}`;
+          }
+        }
+
+        const response = await fetch("/api/liveblocks-auth", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ room }),
+        });
+
+        if (!response.ok) {
+          const payload = (await response.json().catch(() => null)) as {
+            error?: string;
+          } | null;
+
+          throw new Error(payload?.error ?? "Unable to authenticate with Liveblocks");
+        }
+
+        return response.json();
+      }}
+    >
+      <RoomProvider
+        id="home-page"
+        initialPresence={{
+          active: true,
+          cursor: null,
+          cursorProfile: {
+            color: "#00ff66",
+            label: "optimist",
+          },
+        }}
+      >
         <ClientSideSuspense
           fallback={
             <div className="flex min-h-[20px] items-center justify-center px-4">

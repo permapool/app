@@ -5,6 +5,11 @@ declare global {
     // Each user's Presence, for useMyPresence, useOthers, etc.
     Presence: {
       active: boolean;
+      cursor: { x: number; y: number } | null;
+      cursorProfile: {
+        color: string;
+        label: string;
+      };
     };
 
     // The Storage tree for the room, for useMutation, useStorage, etc.
@@ -17,9 +22,11 @@ declare global {
     UserMeta: {
       id: string;
       info: {
-        // Example properties, for useSelf, useUser, useOthers, etc.
-        // name: string;
-        // avatar: string;
+        name: string;
+        username?: string;
+        displayName?: string;
+        role: "guest" | "user" | "moderator" | "admin";
+        authType: "anonymous" | "privy";
       };
     };
 
@@ -32,6 +39,13 @@ declare global {
       | {
           type: "chat_reaction_toggled";
           message: import("~/lib/chat/types").ChatMessagePayload;
+        }
+      | {
+          type: "cursor_reaction";
+          x: number;
+          y: number;
+          value: string;
+          color: string;
         };
 
     // Custom metadata set on threads, for useThreads, useCreateThread, etc.
