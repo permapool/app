@@ -7,6 +7,7 @@ import {
   useUpdateMyPresence,
 } from "@liveblocks/react/suspense";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 import type { CSSProperties } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import CursorReactionPanel from "~/components/live-cursors/CursorReactionPanel";
@@ -84,6 +85,7 @@ export default function LiveCursors({ showControls }: LiveCursorsProps) {
   const cursorRef = useRef<CursorPoint | null>(null);
   const frameRef = useRef<number | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [selectedReaction, setSelectedReaction] = useState<string | null>(null);
   const [reactions, setReactions] = useState<FlyingReaction[]>([]);
   const controlsVisible = showControls || panelOpen;
   const others = useOthersMapped(
@@ -187,18 +189,12 @@ export default function LiveCursors({ showControls }: LiveCursorsProps) {
     );
   });
 
-  const sendReaction = useCallback(
-    (value: string) => {
-      const cursor = cursorRef.current;
-
-      if (!cursor) {
-        return;
-      }
-
+  const sendReactionAtPoint = useCallback(
+    (value: string, point: CursorPoint) => {
       const reaction = {
-        id: `${cursor.x}:${cursor.y}:${value}:${Date.now()}`,
-        x: cursor.x,
-        y: cursor.y,
+        id: `${point.x}:${point.y}:${value}:${Date.now()}`,
+        x: point.x,
+        y: point.y,
         value,
         timestamp: Date.now(),
       };
@@ -206,12 +202,57 @@ export default function LiveCursors({ showControls }: LiveCursorsProps) {
       setReactions((current) => current.concat(reaction));
       broadcast({
         type: "cursor_reaction",
-        x: cursor.x,
-        y: cursor.y,
+        x: point.x,
+        y: point.y,
         value,
       });
     },
     [broadcast],
+  );
+
+  useEffect(() => {
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!selectedReaction) {
+        return;
+      }
+
+      const target = event.target;
+      const isInteractiveTarget =
+        target instanceof HTMLElement &&
+        Boolean(target.closest("button, a, input, textarea, select, [role='button']"));
+
+      if (isInteractiveTarget) {
+        return;
+      }
+
+      const point = {
+        x: Math.round(event.clientX),
+        y: Math.round(event.clientY),
+      };
+
+      cursorRef.current = point;
+      updateMyPresence({ cursor: point });
+      sendReactionAtPoint(selectedReaction, point);
+    };
+
+    window.addEventListener("pointerdown", handlePointerDown);
+
+    return () => window.removeEventListener("pointerdown", handlePointerDown);
+  }, [selectedReaction, sendReactionAtPoint, updateMyPresence]);
+
+  const selectReaction = useCallback(
+    (value: string) => {
+      setSelectedReaction((current) => {
+        const nextReaction = current === value ? null : value;
+
+        if (nextReaction) {
+          setPanelOpen(false);
+        }
+
+        return nextReaction;
+      });
+    },
+    [],
   );
 
   return (
@@ -239,7 +280,7 @@ export default function LiveCursors({ showControls }: LiveCursorsProps) {
         {controlsVisible ? (
           <motion.div
             key="cursor-reaction-controls"
-            className="absolute left-14 top-1 z-40"
+            className="absolute left-[6.25rem] top-[50%] z-40 -translate-y-1/2"
             initial={{ opacity: 0, scale: 0.9, x: -6 }}
             animate={{ opacity: 1, scale: 1, x: 0 }}
             exit={{ opacity: 0, scale: 0.92, x: -6 }}
@@ -249,10 +290,20 @@ export default function LiveCursors({ showControls }: LiveCursorsProps) {
               type="button"
               aria-label={panelOpen ? "Close cursor reactions" : "Open cursor reactions"}
               aria-pressed={panelOpen}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-black bg-[var(--green)] p-0 text-black shadow-solid transition-transform hover:scale-105"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-black bg-[var(--green)] p-0 text-black transition-transform hover:scale-105"
               onClick={() => setPanelOpen((current) => !current)}
             >
-              <span className="h-3 w-3 rounded-full border border-black bg-[var(--background)]" />
+              <Image
+                src="/arrow-circle-up-right-bold.svg"
+                alt=""
+                width={20}
+                height={20}
+              />
+              {selectedReaction ? (
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border border-black bg-[var(--background)] text-[11px] leading-none">
+                  {selectedReaction}
+                </span>
+              ) : null}
             </button>
 
             <AnimatePresence>
@@ -265,7 +316,10 @@ export default function LiveCursors({ showControls }: LiveCursorsProps) {
                   exit={{ opacity: 0, y: 6, scale: 0.96 }}
                   transition={{ duration: 0.16, ease: "easeOut" }}
                 >
-                  <CursorReactionPanel onReaction={sendReaction} />
+                  <CursorReactionPanel
+                    selectedReaction={selectedReaction}
+                    onReaction={selectReaction}
+                  />
                 </motion.div>
               ) : null}
             </AnimatePresence>

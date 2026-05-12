@@ -4,10 +4,12 @@ export const CURSOR_REACTIONS = ["↑", "🔥", "❤️", "😂", "✨"];
 
 type CursorReactionPanelProps = {
   onReaction: (reaction: string) => void;
+  selectedReaction: string | null;
 };
 
 export default function CursorReactionPanel({
   onReaction,
+  selectedReaction,
 }: CursorReactionPanelProps) {
   return (
     <div>
@@ -19,7 +21,12 @@ export default function CursorReactionPanel({
           <button
             key={reaction}
             type="button"
-            className="flex h-8 min-w-0 items-center justify-center rounded-lg border border-black bg-white/80 text-sm text-black transition-transform hover:scale-120"
+            aria-pressed={selectedReaction === reaction}
+            className={`flex h-8 min-w-0 items-center justify-center rounded-lg border border-black text-sm text-black transition-transform hover:scale-110 ${
+              selectedReaction === reaction
+                ? "bg-[var(--green)]"
+                : "bg-white/80"
+            }`}
             onClick={() => onReaction(reaction)}
           >
             {reaction}
