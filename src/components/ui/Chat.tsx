@@ -20,6 +20,7 @@ import type {
 import { compareChatMessages } from "~/lib/chat/utils";
 import ChatComposer from "~/components/ui/chat/ChatComposer";
 import ChatFeed from "~/components/ui/chat/ChatFeed";
+import LiveCursors from "~/components/LiveCursors";
 
 type ApiErrorResponse = {
   error?: string;
@@ -66,6 +67,7 @@ export default function Chat() {
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [newMessageCount, setNewMessageCount] = useState(0);
   const [pendingReactionKey, setPendingReactionKey] = useState<string | null>(null);
+  const [composerExpanded, setComposerExpanded] = useState(false);
   const [, setServerClockTick] = useState(0);
 
   const viewerCount = othersConnectionIds.length + 1;
@@ -366,7 +368,9 @@ export default function Chat() {
         ready={ready}
         sending={sending}
         signedInLabel={signedInLabel}
+        liveCursorControl={<LiveCursors showControls={composerExpanded} />}
         onComposerChange={setComposerValue}
+        onExpandedChange={setComposerExpanded}
         onSend={sendMessage}
       />
       </div>

@@ -6,10 +6,6 @@ declare global {
     Presence: {
       active: boolean;
       cursor: { x: number; y: number } | null;
-      cursorProfile: {
-        color: string;
-        label: string;
-      };
     };
 
     // The Storage tree for the room, for useMutation, useStorage, etc.
@@ -45,7 +41,6 @@ declare global {
           x: number;
           y: number;
           value: string;
-          color: string;
         };
 
     // Custom metadata set on threads, for useThreads, useCreateThread, etc.

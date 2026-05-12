@@ -68,10 +68,6 @@ export function Room({ children }: { children: ReactNode }) {
         initialPresence={{
           active: true,
           cursor: null,
-          cursorProfile: {
-            color: "#00ff66",
-            label: "optimist",
-          },
         }}
       >
         <ClientSideSuspense

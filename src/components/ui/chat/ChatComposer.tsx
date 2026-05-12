@@ -2,6 +2,7 @@
 
 import { ChatCenteredDotsIcon, XIcon } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "framer-motion";
+import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { CHAT_MESSAGE_MAX_LENGTH } from "~/lib/chat/constants";
 
@@ -12,7 +13,9 @@ type ChatComposerProps = {
   ready: boolean;
   sending: boolean;
   signedInLabel: string | null;
+  liveCursorControl?: ReactNode;
   onComposerChange: (value: string) => void;
+  onExpandedChange?: (isExpanded: boolean) => void;
   onSend: () => Promise<void> | void;
 };
 
@@ -23,7 +26,9 @@ export default function ChatComposer({
   ready,
   sending,
   signedInLabel,
+  liveCursorControl,
   onComposerChange,
+  onExpandedChange,
   onSend,
 }: ChatComposerProps) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -55,6 +60,10 @@ export default function ChatComposer({
     await onSend();
     focusTextarea();
   };
+
+  useEffect(() => {
+    onExpandedChange?.(isExpanded);
+  }, [isExpanded, onExpandedChange]);
 
   useEffect(() => {
     if (!isExpanded) {
@@ -229,6 +238,7 @@ export default function ChatComposer({
           </motion.span>
         </AnimatePresence>
       </motion.button>
+      {liveCursorControl}
     </div>
   );
 }

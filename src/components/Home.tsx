@@ -30,9 +30,6 @@ const Live = dynamic(() => import("./Live"));
 const Chat = dynamic(() => import("./ui/Chat"), {
   ssr: false,
 });
-const LiveCursors = dynamic(() => import("./LiveCursors"), {
-  ssr: false,
-});
 
 type VodChannel = { type: "vod"; src: string };
 type LiveChannel = { type: "live" };
@@ -245,12 +242,11 @@ export default function Home() {
           toggleMute={toggleMute}
         />
       </div>
-      <LiveCursors />
       <Chat />
-      <div
+      {/* <div
         aria-hidden="true"
         className="pointer-events-none fixed bottom-0 right-0 z-[10020] h-16 w-40 bg-black"
-      />
+      /> */}
     </>
   );
 }
