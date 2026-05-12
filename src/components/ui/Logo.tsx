@@ -1,37 +1,77 @@
+"use client";
+
+import { motion } from "framer-motion";
+import Image from "next/image";
 import React from "react";
+
+const COLLAPSED_WIDTH = 64;
+const EXPANDED_WIDTH = 238;
 
 const Logo: React.FC<{
   className?: string;
   height?: number | string;
 }> = ({ className = "", height = 48 }) => {
   return (
-    <span
+    <motion.span
       className={className}
+      initial="collapsed"
+      animate="collapsed"
+      whileHover="expanded"
+      whileFocus="expanded"
+      variants={{
+        collapsed: { width: COLLAPSED_WIDTH },
+        expanded: { width: EXPANDED_WIDTH },
+      }}
+      transition={{ duration: 0.24, ease: "easeOut" }}
       style={{
         display: "inline-block",
         height,
-        width: 64,
         overflow: "hidden",
         position: "relative",
         verticalAlign: "middle",
       }}
-      aria-label="Logo"
+      aria-label="HIGHER.ZIP"
     >
-      <svg
-        id="b"
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 955.18 306.97"
-        height="100%"
-        width="auto"
-        style={{ display: "block", maxHeight: "100%" }}
+      <motion.span
+        aria-hidden="true"
+        className="absolute left-0 top-0 block h-full"
+        variants={{
+          collapsed: { opacity: 0 },
+          expanded: { opacity: 1 },
+        }}
+        transition={{ duration: 0.16, ease: "easeOut" }}
+        style={{ width: EXPANDED_WIDTH }}
       >
-        <g id="c">
-          <path d="M463.36,306.97c-21.96,0-39.83-17.87-39.83-39.83s17.87-39.83,39.83-39.83,39.83,17.87,39.83,39.83-17.87,39.83-39.83,39.83Z" />
-          <path d="M955.18,0H403.55l-28.64,104.11h-191.94c9.57-34.73,19.1-69.42,28.67-104.11h-127.78L0,304.78h127.78c9.53-34.69,19.1-69.38,28.64-104.11h191.94c-9.53,34.69-19.1,69.38-28.64,104.11h90.91c-7.6-10.62-12.1-23.61-12.1-37.64,0-35.75,29.08-64.83,64.83-64.83,4.2,0,8.3.42,12.28,1.18,9.81-35.64,19.6-71.28,29.41-106.92h215.82c-79.86,36.09-159.76,72.18-239.63,108.27,27.07,7.79,46.94,32.76,46.94,62.3,0,14.03-4.49,27.02-12.1,37.64h355.25c10.66-38.75,15.99-58.11,26.64-96.86h-223.62c84.75-37.12,169.5-74.24,254.25-111.36,10.62-38.64,15.95-57.93,26.57-96.57Z" />
-          <path d="M503.19,267.14c0-22-17.83-39.83-39.83-39.83s-39.83,17.83-39.83,39.83c0,17.43,11.21,32.24,26.8,37.64h26.06c15.6-5.4,26.8-20.21,26.8-37.64Z" />
-        </g>
-      </svg>
-    </span>
+        <Image
+          src="/logo-full.svg"
+          alt=""
+          fill
+          priority
+          sizes={`${EXPANDED_WIDTH}px`}
+          className="object-contain object-left"
+        />
+      </motion.span>
+
+      <motion.span
+        aria-hidden="true"
+        className="absolute left-0 top-0 block h-full"
+        variants={{
+          collapsed: { opacity: 1 },
+          expanded: { opacity: 0 },
+        }}
+        transition={{ duration: 0.12, ease: "easeOut" }}
+        style={{ width: COLLAPSED_WIDTH }}
+      >
+        <Image
+          src="/logo-dual.svg"
+          alt=""
+          fill
+          priority
+          sizes={`${COLLAPSED_WIDTH}px`}
+          className="object-contain object-left"
+        />
+      </motion.span>
+    </motion.span>
   );
 };
 

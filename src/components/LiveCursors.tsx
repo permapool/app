@@ -7,7 +7,6 @@ import {
   useUpdateMyPresence,
 } from "@liveblocks/react/suspense";
 import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
 import type { CSSProperties } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import CursorReactionPanel from "~/components/live-cursors/CursorReactionPanel";
@@ -43,6 +42,19 @@ function CursorDot() {
       aria-hidden="true"
       className="block h-5 w-5 rounded-full border-2 border-black shadow-[2px_2px_0_rgba(0,0,0,0.35)]"
       style={{ backgroundColor: CURSOR_COLOR }}
+    />
+  );
+}
+
+function CursorReactionIcon() {
+  return (
+    <span
+      aria-hidden="true"
+      className="block h-5 w-5 bg-white"
+      style={{
+        mask: "url('/arrow-circle-up-right-light.svg') center / contain no-repeat",
+        WebkitMask: "url('/arrow-circle-up-right-light.svg') center / contain no-repeat",
+      }}
     />
   );
 }
@@ -280,25 +292,20 @@ export default function LiveCursors({ showControls }: LiveCursorsProps) {
         {controlsVisible ? (
           <motion.div
             key="cursor-reaction-controls"
-            className="absolute left-[6.25rem] top-[50%] z-40 -translate-y-1/2"
-            initial={{ opacity: 0, scale: 0.9, x: -6 }}
-            animate={{ opacity: 1, scale: 1, x: 0 }}
-            exit={{ opacity: 0, scale: 0.92, x: -6 }}
+            className="absolute -top-14 left-0 z-40 flex h-12 w-12 items-center justify-center"
+            initial={{ opacity: 0, scale: 0.9, y: 6 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.92, y: 6 }}
             transition={{ duration: 0.16, ease: "easeOut" }}
           >
             <button
               type="button"
               aria-label={panelOpen ? "Close cursor reactions" : "Open cursor reactions"}
               aria-pressed={panelOpen}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-black bg-[var(--green)] p-0 text-black transition-transform hover:scale-105"
+              className="relative flex h-10 w-10 items-center justify-center rounded-full border border-black bg-[var(--green)] p-0 text-white transition-transform hover:scale-105"
               onClick={() => setPanelOpen((current) => !current)}
             >
-              <Image
-                src="/arrow-circle-up-right-bold.svg"
-                alt=""
-                width={20}
-                height={20}
-              />
+              <CursorReactionIcon />
               {selectedReaction ? (
                 <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border border-black bg-[var(--background)] text-[11px] leading-none">
                   {selectedReaction}
