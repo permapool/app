@@ -39,7 +39,10 @@ export async function printChatMessage({
       Authorization: `Bearer ${config.token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ text: `${username}: ${message}` }),
+    body: JSON.stringify({
+      text: `${username}: ${message}`,
+      printer: "receipt",
+    }),
   });
 
   if (!response.ok) {
