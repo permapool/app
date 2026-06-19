@@ -76,7 +76,7 @@ export async function printChatMessage({
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      text: `${toCp437Printable(username)}: ${toCp437Printable(message)}${"\n".repeat(8)}`,
+      text: `${toCp437Printable(username)}: ${toCp437Printable(message)}`,
       printer: "receipt",
       noCut: true,
     }),
