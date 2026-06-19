@@ -1,9 +1,10 @@
-import { NextRequest } from "next/server";
+import { after, NextRequest } from "next/server";
 import {
   ChatApiError,
   createChatMessage,
   requireCurrentUser,
 } from "~/lib/chat/server";
+import { printChatMessage } from "~/lib/printer";
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,6 +14,13 @@ export async function POST(request: NextRequest) {
       content: body.content ?? "",
       userId: user.userId,
     });
+
+    after(() =>
+      printChatMessage({
+        username: user.username,
+        message: message.content,
+      }),
+    );
 
     return Response.json(message, { status: 201 });
   } catch (error) {
