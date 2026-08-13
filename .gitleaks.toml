@@ -12,7 +12,8 @@ entropy = 3.5
 keywords = ["PRIVY_APP_SECRET"]
 
 [[rules.allowlists]]
-stopwords = ["dummy", "example", "placeholder", "sample"]
+regexTarget = "secret"
+regexes = ['''^(?i:dummy|example|placeholder|sample)$''']
 
 [[rules]]
 id = "higher-privy-authorization-private-key"
@@ -23,7 +24,8 @@ entropy = 3.5
 keywords = ["PRIVY_", "PRIVATE_KEY"]
 
 [[rules.allowlists]]
-stopwords = ["dummy", "example", "placeholder", "sample"]
+regexTarget = "secret"
+regexes = ['''^(?i:dummy|example|placeholder|sample)$''']
 
 [[rules]]
 id = "higher-printer-bearer-credential"
@@ -34,7 +36,8 @@ entropy = 3.5
 keywords = ["PRINTER_", "TOKEN"]
 
 [[rules.allowlists]]
-stopwords = ["dummy", "example", "placeholder", "sample"]
+regexTarget = "secret"
+regexes = ['''^(?i:dummy|example|placeholder|sample)$''']
 
 [[rules]]
 id = "higher-farstore-bearer-credential"
@@ -45,7 +48,8 @@ entropy = 3.5
 keywords = ["FARSTORE_", "API_KEY", "AUTH_TOKEN"]
 
 [[rules.allowlists]]
-stopwords = ["dummy", "example", "placeholder", "sample"]
+regexTarget = "secret"
+regexes = ['''^(?i:dummy|example|placeholder|sample)$''']
 
 [[rules]]
 id = "higher-server-wallet-authorization-credential"
@@ -56,7 +60,8 @@ entropy = 3.5
 keywords = ["SERVER_WALLET_"]
 
 [[rules.allowlists]]
-stopwords = ["dummy", "example", "placeholder", "sample"]
+regexTarget = "secret"
+regexes = ['''^(?i:dummy|example|placeholder|sample)$''']
 
 [[rules]]
 id = "higher-generic-pem-private-key"
@@ -91,5 +96,9 @@ stopwords = [
   "UPSTASH_REDIS_REST_TOKEN",
   "UPSTASH_REDIS_REST_URL",
   "WELLKNOWN_JSON",
-  "CP437-compatible",
 ]
+
+[[rules.allowlists]]
+description = "Known public historical label"
+regexTarget = "secret"
+regexes = ['''^CP437-compatible$''']

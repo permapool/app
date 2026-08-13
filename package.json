@@ -10,6 +10,7 @@
     "security:browser-boundary": "node scripts/verify-browser-boundary.mjs",
     "security:secrets": "gitleaks git --config .gitleaks.toml --redact --no-banner .",
     "security:secrets:staged": "gitleaks git --config .gitleaks.toml --redact --staged --pre-commit .",
+    "security:secrets:test": "node scripts/test-gitleaks-config.mjs",
     "config": "node config",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",

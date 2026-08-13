@@ -5,7 +5,13 @@
 `npm run dev`
 # Security checks
 
-Gitleaks is pinned to version `8.29.1` in CI. After installing that version locally, scan repository history with:
+CI downloads the open-source Gitleaks CLI version `8.29.1`, verifies the release archive against a reviewed hardcoded SHA-256 checksum, and scans full Git history. After installing that version locally, test the repository rules with:
+
+```bash
+npm run security:secrets:test
+```
+
+Scan repository history with:
 
 ```bash
 npm run security:secrets
