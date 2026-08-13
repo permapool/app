@@ -134,6 +134,14 @@ This plan does not authorize changing deployed Privy settings. Dashboard and dep
 - The remaining product work was understood to be the deposit page plus a production-hardening pass.
 - Existing converted users must not have wallets recreated or migrated merely because `createOnLogin` is currently `off`.
 
+### Hardening progress recorded before HTTP validation
+
+- Privy environment isolation is complete and was verified on the stable staging environment: production uses the production Privy application, while local, preview, and staging use the development application.
+- Repository secret scanning, explicit server-only credential boundaries, reduced identity/provider logging, stable provider-facing errors, and browser-bundle boundary verification are complete.
+- Staging authentication, logout, profile/session behavior, chat, and wallet-link initiation were manually verified after the environment and secret-boundary changes.
+- CSP is entering report-only validation. This phase observes and triages browser-console violations on staging; it does not enforce CSP yet.
+- Embedded-wallet creation remains disabled with `createOnLogin: "off"` pending the separately approved wallet-creation and recovery slice.
+
 ### Wallet and network boundaries
 
 #### Embedded user wallets
