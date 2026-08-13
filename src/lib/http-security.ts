@@ -19,9 +19,11 @@ const CSP_DIRECTIVES = {
     "https://api.liveblocks.io",
     "wss://api.liveblocks.io",
     "https://mainnet.base.org",
+    "https://livepeercdn.com",
+    "https://playback.livepeer.studio",
     "https://u3cey55qwrm3ndc7ymvsajjwzq0wfvrx.lambda-url.us-east-1.on.aws",
   ],
-  "media-src": ["'self'", "https://livepeercdn.com"],
+  "media-src": ["'self'", "blob:", "https://livepeercdn.com"],
   "frame-src": [
     "https://auth.privy.io",
     "https://verify.walletconnect.com",
@@ -37,12 +39,9 @@ const CSP_DIRECTIVES = {
   "manifest-src": ["'self'"],
 } as const;
 
-export const REPORT_ONLY_CSP = [
-  ...Object.entries(CSP_DIRECTIVES).map(
-    ([directive, sources]) => `${directive} ${sources.join(" ")}`,
-  ),
-  "upgrade-insecure-requests",
-].join("; ");
+export const REPORT_ONLY_CSP = Object.entries(CSP_DIRECTIVES)
+  .map(([directive, sources]) => `${directive} ${sources.join(" ")}`)
+  .join("; ");
 
 export const STATIC_SECURITY_HEADERS = [
   { key: "X-Content-Type-Options", value: "nosniff" },

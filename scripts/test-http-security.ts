@@ -20,7 +20,6 @@ const requiredDirectives = [
   "frame-src",
   "worker-src",
   "manifest-src",
-  "upgrade-insecure-requests",
 ];
 
 for (const directive of requiredDirectives) {
@@ -31,6 +30,18 @@ assert.equal(REPORT_ONLY_CSP.includes("*"), false, "CSP must not contain wildcar
 assert.equal(REPORT_ONLY_CSP.includes("'unsafe-eval'"), false);
 assert.equal(REPORT_ONLY_CSP.includes("report-uri"), false);
 assert.equal(REPORT_ONLY_CSP.includes("report-to"), false);
+assert.doesNotMatch(REPORT_ONLY_CSP, /(?:^|; )upgrade-insecure-requests(?:;|$)/);
+assert.equal(REPORT_ONLY_CSP.includes("vercel.live"), false);
+
+const directives = new Map(
+  REPORT_ONLY_CSP.split("; ").map((entry) => {
+    const [directive, ...sources] = entry.split(" ");
+    return [directive, sources];
+  }),
+);
+assert.ok(directives.get("media-src")?.includes("blob:"));
+assert.ok(directives.get("connect-src")?.includes("https://livepeercdn.com"));
+assert.ok(directives.get("connect-src")?.includes("https://playback.livepeer.studio"));
 
 const staticHeaderMap = new Map<string, string>(
   STATIC_SECURITY_HEADERS.map(({ key, value }) => [key, value]),

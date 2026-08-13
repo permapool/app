@@ -10,17 +10,21 @@ This phase adds an observable HTTP security baseline without enforcing Content S
 - `https://api.liveblocks.io` and `wss://api.liveblocks.io` are the installed Liveblocks client's default HTTP and WebSocket origin.
 - `https://mainnet.base.org` is the Wagmi/Viem Base fallback RPC origin.
 - The AWS Lambda origin is called directly by `Username` for address-to-Farcaster lookup.
-- `https://livepeercdn.com` serves the configured HLS media.
+- Staging playback telemetry verified that Livepeer uses `blob:` media URLs and connects to both `https://livepeercdn.com` and `https://playback.livepeer.studio`. The CDN origin also serves the configured HLS media.
 - Google Fonts requires `https://fonts.googleapis.com` for the stylesheet and `https://fonts.gstatic.com` for font files.
-- `data:` and `blob:` are limited to images, matching Privy's documented image requirements and packaged wallet icons.
+- `data:` is limited to images, matching Privy's documented image requirements and packaged wallet icons. `blob:` is allowed for images and, based on staging playback telemetry, Livepeer media playback.
 
-No Slice API, printer, Farstore, Livepeer Studio API, database, or notification origin is in `connect-src`: those requests are server-to-server. Slice product image origins are response data and are intentionally not guessed; report-only staging observations must identify any current image origin before enforcement.
+No Slice API, printer, Farstore, Livepeer Studio management API, database, or notification origin is in `connect-src`: those requests are server-to-server. The Livepeer playback origins above are browser-side requirements observed during staging playback. Slice product image origins are response data and are intentionally not guessed; report-only staging observations must identify any current image origin before enforcement.
+
+The Vercel Preview Toolbar produced `vercel.live` script and frame violations during staging validation. Those violations are tooling noise rather than production application requirements, so `vercel.live` is intentionally absent from every directive. The toolbar and Vercel configuration are unchanged.
 
 ## Temporary directives and enforcement path
 
 `script-src 'unsafe-inline'` is temporary because this Next.js 15 application is currently statically rendered and emits inline bootstrap data. `style-src 'unsafe-inline'` is temporary because the application and component libraries use React style attributes. Production does not allow `'unsafe-eval'`; development tooling violations may appear locally without weakening the production candidate.
 
 Before enforcement, triage staging console violations, remove unused origins, and choose a compatible nonce or hash strategy. Next.js nonces require per-request dynamic rendering, so that performance and caching change needs a separate review. Inline React styles must be migrated or covered by a reviewed strategy before removing the style exception.
+
+`upgrade-insecure-requests` is omitted during report-only validation because browsers ignore it in a report-only policy. Reassess and add it, if appropriate, when the application moves to an enforced CSP.
 
 ## Other headers
 
