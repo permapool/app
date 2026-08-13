@@ -1,3 +1,5 @@
+import "server-only";
+
 import { Liveblocks } from "@liveblocks/node";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
@@ -250,10 +252,13 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unable to authenticate with Liveblocks";
-    const status = message === "Missing Privy access token" ? 401 : 500;
+    const status =
+      error instanceof Error && error.message === "Missing Privy access token" ? 401 : 500;
 
-    return NextResponse.json({ error: message }, { status });
+    console.error("[liveblocks-auth] authentication failed", {
+      errorName: error instanceof Error ? error.name : "UnknownError",
+    });
+
+    return NextResponse.json({ error: "Unable to authenticate with Liveblocks" }, { status });
   }
 }

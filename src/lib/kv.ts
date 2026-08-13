@@ -1,3 +1,5 @@
+import "server-only";
+
 import { FrameNotificationDetails } from "@farcaster/frame-sdk";
 
 const baseUrl = process.env.FARSTORE_API_URL;

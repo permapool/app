@@ -1,0 +1,95 @@
+title = "higher.zip secret detection"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "higher-privy-app-secret"
+description = "Privy app secret assignment"
+regex = '''(?i)PRIVY_APP_SECRET\s*[:=]\s*["']?([A-Za-z0-9_+/=-]{16,})'''
+secretGroup = 1
+entropy = 3.5
+keywords = ["PRIVY_APP_SECRET"]
+
+[[rules.allowlists]]
+stopwords = ["dummy", "example", "placeholder", "sample"]
+
+[[rules]]
+id = "higher-privy-authorization-private-key"
+description = "Privy authorization private key assignment"
+regex = '''(?i)PRIVY_[A-Z0-9_]*(?:AUTHORIZATION|AUTH)[A-Z0-9_]*PRIVATE_KEY\s*[:=]\s*["']?([A-Za-z0-9_+/=-]{20,})'''
+secretGroup = 1
+entropy = 3.5
+keywords = ["PRIVY_", "PRIVATE_KEY"]
+
+[[rules.allowlists]]
+stopwords = ["dummy", "example", "placeholder", "sample"]
+
+[[rules]]
+id = "higher-printer-bearer-credential"
+description = "Printer bearer credential assignment"
+regex = '''(?i)PRINTER_(?:AUTH_)?TOKEN\s*[:=]\s*["']?([A-Za-z0-9_+/=-]{12,})'''
+secretGroup = 1
+entropy = 3.5
+keywords = ["PRINTER_", "TOKEN"]
+
+[[rules.allowlists]]
+stopwords = ["dummy", "example", "placeholder", "sample"]
+
+[[rules]]
+id = "higher-farstore-bearer-credential"
+description = "Farstore bearer credential assignment"
+regex = '''(?i)FARSTORE_(?:API_KEY|AUTH_TOKEN)\s*[:=]\s*["']?([A-Za-z0-9_+/=-]{12,})'''
+secretGroup = 1
+entropy = 3.5
+keywords = ["FARSTORE_", "API_KEY", "AUTH_TOKEN"]
+
+[[rules.allowlists]]
+stopwords = ["dummy", "example", "placeholder", "sample"]
+
+[[rules]]
+id = "higher-server-wallet-authorization-credential"
+description = "Server-wallet authorization credential assignment"
+regex = '''(?i)(?:PRIVY_)?SERVER_WALLET_[A-Z0-9_]*(?:AUTH|SECRET|TOKEN|PRIVATE_KEY)[A-Z0-9_]*\s*[:=]\s*["']?([A-Za-z0-9_+/=-]{16,})'''
+secretGroup = 1
+entropy = 3.5
+keywords = ["SERVER_WALLET_"]
+
+[[rules.allowlists]]
+stopwords = ["dummy", "example", "placeholder", "sample"]
+
+[[rules]]
+id = "higher-generic-pem-private-key"
+description = "PEM private key"
+regex = '''-----BEGIN (?:RSA |EC |DSA |OPENSSH |PGP )?PRIVATE KEY-----'''
+keywords = ["PRIVATE KEY"]
+
+[[rules]]
+id = "generic-api-key"
+
+[[rules.allowlists]]
+description = "Environment variable identifiers are names, not credential values"
+stopwords = [
+  "BASE_JSON_RPC_URL",
+  "CHAT_PRINTER_ENABLED",
+  "DATABASE_URL",
+  "FARSTORE_API_KEY",
+  "FARSTORE_API_URL",
+  "LIVEBLOCKS_SECRET_KEY",
+  "LIVEPEER_API_KEY",
+  "LIVEPEER_STREAM_ID",
+  "MAINNET_JSON_RPC_URL",
+  "NEYNAR_API_KEY",
+  "NEXT_PUBLIC_LIVEPEER_PLAYBACK_ID",
+  "NEXT_PUBLIC_PRIVY_APP_ID",
+  "NEXT_PUBLIC_URL",
+  "PRINTER_AUTH_TOKEN",
+  "PRINTER_HOST",
+  "PRIVY_APP_SECRET",
+  "PRIVY_AUTHORIZATION_PRIVATE_KEY",
+  "PRIVY_SERVER_WALLET_AUTHORIZATION_KEY",
+  "UPSTASH_REDIS_REST_TOKEN",
+  "UPSTASH_REDIS_REST_URL",
+  "WELLKNOWN_JSON",
+  "CP437-compatible",
+]

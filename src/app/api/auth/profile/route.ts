@@ -56,10 +56,11 @@ async function handleUpdateProfile(request: NextRequest) {
       return Response.json({ error: "Username is already taken." }, { status: 409 });
     }
 
-    const message =
-      error instanceof Error ? error.message : "Unable to update profile";
+    console.error("[auth/profile] failed to update profile", {
+      errorName: error instanceof Error ? error.name : "UnknownError",
+    });
 
-    return Response.json({ error: message }, { status: 400 });
+    return Response.json({ error: "Unable to update profile." }, { status: 400 });
   }
 }
 

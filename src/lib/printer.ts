@@ -1,3 +1,5 @@
+import "server-only";
+
 // IBM PC code page 437 (USA, Standard Europe) printable characters.
 const CP437_BYTE_TO_UNICODE = [
   0x00c7, 0x00fc, 0x00e9, 0x00e2, 0x00e4, 0x00e0, 0x00e5, 0x00e7, 0x00ea, 0x00eb, 0x00e8,
@@ -83,7 +85,6 @@ export async function printChatMessage({
   });
 
   if (!response.ok) {
-    const body = await response.text().catch(() => "");
-    console.error("[printer] print request failed", response.status, body);
+    console.error("[printer] print request failed", { status: response.status });
   }
 }

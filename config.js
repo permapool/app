@@ -1,3 +1,7 @@
+if (typeof window !== 'undefined') {
+  throw new Error('config.js is a server-only command-line utility');
+}
+
 const dotenv = require('dotenv');
 const axios = require('axios');
 const path = require('path');
@@ -91,5 +95,4 @@ const getFid = async (address) => {
   }
   console.log(`\nWELLKNOWN_JSON='${JSON.stringify(jsonJfs)}'\n`);
 })();
-
 

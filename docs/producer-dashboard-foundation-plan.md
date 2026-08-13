@@ -75,7 +75,7 @@ The repository root for this plan is `app/` within the workspace. Important veri
 - Existing chat messages are persisted in PostgreSQL through `createChatMessage()` in [`src/lib/chat/server.ts`](../src/lib/chat/server.ts) and broadcast client-side through `Chat` in [`src/components/ui/Chat.tsx`](../src/components/ui/Chat.tsx).
 - The actual chat message limit is 280 characters through `CHAT_MESSAGE_MAX_LENGTH` in [`src/lib/chat/constants.ts`](../src/lib/chat/constants.ts), enforced in both `createChatMessage()` and `ChatComposer`.
 - Physical chat printing currently runs after successful message persistence using Next.js `after()` in `POST()` in [`src/app/api/chat/messages/route.ts`](../src/app/api/chat/messages/route.ts).
-- The authenticated printer client is `printChatMessage()` in [`src/lib/printer.ts`](../src/lib/printer.ts). It calls `PRINTER_HOST/print` with a Bearer token, CP437-compatible filtering, printer name `receipt`, and `noCut: true`.
+- The authenticated printer client is `printChatMessage()` in [`src/lib/printer.ts`](../src/lib/printer.ts). It calls `PRINTER_HOST/print` with a Bearer token, CP437 filtering, printer name `receipt`, and `noCut: true`.
 - Printer configuration names `CHAT_PRINTER_ENABLED`, `PRINTER_HOST`, and `PRINTER_AUTH_TOKEN` are documented in [`.env.example`](../.env.example). No secret values may be printed or copied into logs or documentation.
 - There is no existing test runner script or repository test suite in `package.json`.
 

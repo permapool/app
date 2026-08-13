@@ -15,7 +15,6 @@ export async function POST(request: NextRequest) {
   let data;
   try {
     data = await parseWebhookEvent(requestJson, verifyAppKeyWithNeynar);
-    console.log("WEBHOOK-DATA", data);
   } catch (e: unknown) {
     const error = e as ParseWebhookEvent.ErrorType;
 

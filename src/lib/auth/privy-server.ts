@@ -1,3 +1,5 @@
+import "server-only";
+
 import { PrivyClient, type LinkedAccount, type User as PrivyUser } from "@privy-io/node";
 
 const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID;

@@ -1,3 +1,5 @@
+import "server-only";
+
 import type { User as PrivyUser } from "@privy-io/node";
 import { createPublicClient, http } from "viem";
 import { mainnet } from "viem/chains";
