@@ -42,7 +42,9 @@ Privy environment isolation, credential hardening, wallet-behavior verification,
 - The embedded-wallet creation policy is `users-without-wallets`: new email users without an EVM wallet receive a Privy embedded wallet, while users with an existing linked EVM wallet do not receive a redundant embedded wallet.
 - Existing embedded wallets remain untouched. No blanket existing-user backfill is planned.
 - The deposit page funds the user's own embedded or connected EVM wallet on Base. higher.zip does not hold a platform balance or take custody, and deposits do not fund producer or show airdrop balances.
-- Deposit funding-method support remains pending final confirmation.
+- Base is the only supported v1 transaction network.
+- Deposit funding methods for v1 are a Base receive-address/QR flow and the Privy-supported funding/onramp options available in the configured environment.
+- Unsupported Privy funding methods must be hidden or shown unavailable rather than simulated.
 - The existing physical-printer integration is real and classified as **Exists but needs modification**. It is not modified in this slice.
 - No producer revenue-share percentage will be stored, calculated, or displayed.
 - Financial, sponsor, social, TiVo, printer-control, analytics, and airdrop implementations are deferred.
@@ -247,7 +249,8 @@ No blanket existing-user backfill is planned. A targeted correction remains perm
 - higher.zip does not receive or hold a platform balance and does not take custody in this flow.
 - Privy server wallets are not a deposit destination.
 - The deposit page does not fund a producer balance, show balance, reward treasury, or airdrop pool.
-- Deposit funding-method support remains pending final confirmation and must be settled before implementation.
+- V1 supports a Base receive-address/QR flow plus Privy-supported funding/onramp options available in the configured environment.
+- Unsupported Privy funding methods must be hidden or shown unavailable rather than simulated.
 - Transaction intent/status, wallet selection, network validation, and user-visible confirmation remain required even though higher.zip does not custody funds.
 
 Server-wallet activation remains operationally separate and does not alter this non-custodial destination decision.
@@ -1333,7 +1336,7 @@ npm run build
 
 ## Prerequisite Ticket P7 — Deposit product boundary
 
-**Goal:** Confirm the non-custodial user-wallet deposit boundary, settle supported funding methods, and define the minimal durable contract before implementation.
+**Goal:** Confirm the non-custodial user-wallet deposit boundary and define the minimal durable contract for the approved v1 funding methods before implementation.
 
 **Dependencies:** P1, P5, and P6.
 
@@ -1344,7 +1347,8 @@ npm run build
 - Destination is the user's own deterministically selected Privy embedded or connected EVM wallet on Base.
 - higher.zip holds no platform balance and takes no custody.
 - The deposit does not fund a producer, show, reward, or airdrop balance.
-- Supported funding methods are explicitly confirmed before Ticket P8 begins.
+- Supported v1 funding methods are a Base receive-address/QR flow and Privy-supported funding/onramp options available in the configured environment.
+- Unsupported Privy funding methods are hidden or shown unavailable rather than simulated.
 - Supported asset and Base network assumptions are tied to checked-in evidence and product approval.
 - User-wallet versus server-wallet signing responsibility is explicit.
 - Ledger/status model covers initiation, provider/transaction reference, confirmation, failure, retry, and idempotency.
@@ -1696,9 +1700,8 @@ Known limitations remain: printing is chat-triggered rather than donation-trigge
 
 5. Who owns creation and operational approval for the separate development Privy app, environment credential mapping, and allowed-origin changes?
 6. Which preview deployment origins, if any, are approved to use development credentials, and how are unapproved previews prevented from authenticating?
-7. Which deposit funding methods are supported initially (for example, onchain transfer, card/onramp, or both), and which provider is approved for any fiat funding path?
-8. Which assets are supported initially on Base, and what transaction-confirmation depth/status is considered final for the deposit experience?
-9. Who owns operational approval for MFA, recovery, session duration, enabled login methods, confirmation behavior, and production CSP enforcement?
+7. Which assets are supported initially on Base, and what transaction-confirmation depth/status is considered final for the deposit experience?
+8. Who owns operational approval for MFA, recovery, session duration, enabled login methods, confirmation behavior, and production CSP enforcement?
 
 ## Non-blocking defaults
 
