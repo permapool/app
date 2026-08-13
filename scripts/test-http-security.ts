@@ -26,7 +26,6 @@ for (const directive of requiredDirectives) {
   assert.match(REPORT_ONLY_CSP, new RegExp(`(?:^|; )${directive}(?: |;|$)`));
 }
 
-assert.equal(REPORT_ONLY_CSP.includes("*"), false, "CSP must not contain wildcard sources");
 assert.equal(REPORT_ONLY_CSP.includes("'unsafe-eval'"), false);
 assert.equal(REPORT_ONLY_CSP.includes("report-uri"), false);
 assert.equal(REPORT_ONLY_CSP.includes("report-to"), false);
@@ -42,6 +41,16 @@ const directives = new Map(
 assert.ok(directives.get("media-src")?.includes("blob:"));
 assert.ok(directives.get("connect-src")?.includes("https://livepeercdn.com"));
 assert.ok(directives.get("connect-src")?.includes("https://playback.livepeer.studio"));
+assert.ok(directives.get("connect-src")?.includes("https://*.lp-playback.studio"));
+
+const wildcardSources = [...directives.values()]
+  .flat()
+  .filter((source) => source.includes("*"));
+assert.deepEqual(
+  wildcardSources,
+  ["https://*.lp-playback.studio"],
+  "Only the evidence-based Livepeer regional hostname wildcard is allowed",
+);
 
 const staticHeaderMap = new Map<string, string>(
   STATIC_SECURITY_HEADERS.map(({ key, value }) => [key, value]),

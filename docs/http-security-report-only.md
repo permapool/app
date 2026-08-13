@@ -11,6 +11,7 @@ This phase adds an observable HTTP security baseline without enforcing Content S
 - `https://mainnet.base.org` is the Wagmi/Viem Base fallback RPC origin.
 - The AWS Lambda origin is called directly by `Username` for address-to-Farcaster lookup.
 - Staging playback telemetry verified that Livepeer uses `blob:` media URLs and connects to both `https://livepeercdn.com` and `https://playback.livepeer.studio`. The CDN origin also serves the configured HLS media.
+- Livepeer playback can redirect to region-selected Catalyst hosts below `lp-playback.studio`. Staging observed a regional host, and [Livepeer's GeoDNS documentation](https://docs.livepeer.org/v1/developers/guides/livestream-from-browser#get-the-sdp-host) documents selection of a different regional Catalyst host for the lowest-latency server. Because the region and node can vary, `https://*.lp-playback.studio` is the narrowest durable source; a single regional hostname would be brittle.
 - Google Fonts requires `https://fonts.googleapis.com` for the stylesheet and `https://fonts.gstatic.com` for font files.
 - `data:` is limited to images, matching Privy's documented image requirements and packaged wallet icons. `blob:` is allowed for images and, based on staging playback telemetry, Livepeer media playback.
 

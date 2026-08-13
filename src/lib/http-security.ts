@@ -21,6 +21,7 @@ const CSP_DIRECTIVES = {
     "https://mainnet.base.org",
     "https://livepeercdn.com",
     "https://playback.livepeer.studio",
+    "https://*.lp-playback.studio",
     "https://u3cey55qwrm3ndc7ymvsajjwzq0wfvrx.lambda-url.us-east-1.on.aws",
   ],
   "media-src": ["'self'", "blob:", "https://livepeercdn.com"],

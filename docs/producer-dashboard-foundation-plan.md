@@ -141,7 +141,9 @@ This plan does not authorize changing deployed Privy settings. Dashboard and dep
 - Staging authentication, logout, profile/session behavior, chat, and wallet-link initiation were manually verified after the environment and secret-boundary changes.
 - CSP is entering report-only validation. This phase observes and triages browser-console violations on staging; it does not enforce CSP yet.
 - Clean staging telemetry verified that Livepeer playback requires `blob:` media plus browser connections to the Livepeer CDN and playback service. `upgrade-insecure-requests` is deferred until enforcement because browsers ignore it in report-only policies.
+- Livepeer playback also redirects through GeoDNS-selected regional Catalyst hosts under `lp-playback.studio`; report-only `connect-src` therefore permits that narrow hostname family rather than one rotating regional node.
 - Vercel Preview Toolbar `vercel.live` script and frame violations are intentionally unresolved tooling noise and do not expand the application policy. `frame-ancestors 'self'` remains report-only and is not enforcement-ready until actual Farcaster host embedding is tested.
+- A one-off Privy iframe-ready queue error observed during clean staging testing is non-blocking and must be reproduced or cleared during embedded-wallet end-to-end verification; this observation does not authorize authentication changes.
 - Embedded-wallet creation remains disabled with `createOnLogin: "off"` pending the separately approved wallet-creation and recovery slice.
 
 ### Wallet and network boundaries
