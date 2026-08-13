@@ -207,7 +207,7 @@ This plan does not authorize changing deployed Privy settings. Dashboard and dep
 ### HTTP and authentication hardening
 
 - Deploy CSP in report-only mode, inventory required Privy/Liveblocks/Livepeer/Wagmi origins, resolve violations, then enforce.
-- Add HSTS, `X-Content-Type-Options`, appropriate framing policy, referrer policy, and permissions policy.
+- Treat HSTS as Vercel edge-owned and verify it on deployed Production and staging responses; do not add a conflicting repository value. Add `X-Content-Type-Options`, appropriate framing policy, referrer policy, and permissions policy in repository configuration.
 - Review CORS endpoint by endpoint; keep application APIs same-origin unless a specific external caller requires an explicit allowlist.
 - Verify MFA configuration, enrollment, and challenge behavior in the Privy dashboard.
 - Verify embedded-wallet recovery method and new-device recovery in the Privy dashboard and end-to-end tests.
@@ -1267,12 +1267,12 @@ npm run build
 
 **Dependencies:** P2–P3; complete list of required Privy/network origins.
 
-**Files likely affected:** `next.config.ts`, middleware/route handlers if present, security-header tests.
+**Files likely affected:** `next.config.ts` and security-header tests. Add middleware or route-handler logic only if a separate verified requirement cannot be met statically.
 
 **Acceptance criteria:**
 
 - CSP starts in report-only mode with violations observed and triaged, then moves to enforcement.
-- Production security headers include appropriate HSTS, content-type, referrer, frame/embedding, and permissions policies.
+- Vercel-owned HSTS is verified on deployed Production and staging responses without a repository override; repository headers include appropriate content-type, referrer, frame/embedding, and permissions policies.
 - CORS is reviewed route-by-route; no broad credentialed origin policy is introduced.
 - Privy login, wallet UI, signing, funding, and transaction confirmation still function under enforced policy.
 - Local/staging policy remains testable without weakening production.

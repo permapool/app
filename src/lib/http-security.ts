@@ -1,9 +1,3 @@
-type HstsRequestContext = {
-  hostname: string;
-  nodeEnv: string | undefined;
-  protocol: string;
-};
-
 const CSP_DIRECTIVES = {
   "default-src": ["'self'"],
   "base-uri": ["'self'"],
@@ -58,21 +52,3 @@ export const STATIC_SECURITY_HEADERS = [
     value: "browsing-topics=(), camera=(), geolocation=(), microphone=()",
   },
 ] as const;
-
-export const HSTS_VALUE = "max-age=31536000; includeSubDomains";
-
-function isLocalHostname(hostname: string) {
-  const normalized = hostname.toLowerCase();
-
-  return (
-    normalized === "localhost" ||
-    normalized.endsWith(".localhost") ||
-    normalized === "127.0.0.1" ||
-    normalized === "::1" ||
-    normalized === "[::1]"
-  );
-}
-
-export function shouldSetHsts({ hostname, nodeEnv, protocol }: HstsRequestContext) {
-  return nodeEnv === "production" && protocol === "https" && !isLocalHostname(hostname);
-}

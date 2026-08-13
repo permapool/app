@@ -1,6 +1,6 @@
 # HTTP security baseline: report-only phase
 
-This phase adds an observable HTTP security baseline without enforcing Content Security Policy (CSP). Browsers receive `Content-Security-Policy-Report-Only`; they do not receive an enforced `Content-Security-Policy` header. No reporting endpoint is configured, so staging validation uses browser developer-console violations during the existing authentication, logout, profile/session, chat, wallet-link, media, and calendar checks.
+This phase adds an observable HTTP security baseline without enforcing Content Security Policy (CSP) on application documents. Browsers receive `Content-Security-Policy-Report-Only` on application documents; they do not receive a repository-configured enforced `Content-Security-Policy` header. Next.js may independently emit a sandbox CSP for image-optimizer responses; that framework response policy is not application-document CSP enforcement. No reporting endpoint is configured, so staging validation uses browser developer-console violations during the existing authentication, logout, profile/session, chat, wallet-link, media, and calendar checks.
 
 ## Policy evidence
 
@@ -24,9 +24,11 @@ Before enforcement, triage staging console violations, remove unused origins, an
 
 ## Other headers
 
-All routes receive `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and a Permissions Policy disabling browsing topics, camera, geolocation, and microphone. HSTS is added only for non-local HTTPS requests in the production runtime, uses a one-year lifetime with subdomains, and deliberately omits `preload`.
+All routes receive `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and a Permissions Policy disabling browsing topics, camera, geolocation, and microphone.
 
-`X-Frame-Options` is omitted while `frame-ancestors 'self'` is validated in report-only mode because the repository contains a Farcaster Mini App integration and enforced framing restrictions could break it. COOP, CORP, and COEP are omitted during this phase because wallet popups, Mini App embedding, cross-origin product images, and media have not been proven compatible with cross-origin isolation. These omissions are safer than enabling isolation headers prematurely.
+HSTS is currently supplied by Vercel at the platform edge. The repository intentionally does not add or override `Strict-Transport-Security`; deployed Production and staging responses must be inspected after publication to verify the platform behavior. `includeSubDomains`, duration, and preload policy are not controlled by this repository. Any future hosting-platform migration must reassess HSTS ownership before traffic moves.
+
+`X-Frame-Options` is omitted. `frame-ancestors 'self'` is report-only and is not enforcement-ready for Farcaster Mini App embedding: actual embedding parent origins must be learned through staging telemetry before an enforced policy is designed. No speculative frame ancestors are added. COOP, CORP, and COEP are also omitted during this phase because wallet popups, Mini App embedding, cross-origin product images, and media have not been proven compatible with cross-origin isolation. These omissions are safer than enabling isolation headers prematurely.
 
 ## CORS review
 

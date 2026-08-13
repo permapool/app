@@ -1,10 +1,8 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import {
-  HSTS_VALUE,
   REPORT_ONLY_CSP,
   STATIC_SECURITY_HEADERS,
-  shouldSetHsts,
 } from "../src/lib/http-security";
 
 const requiredDirectives = [
@@ -41,25 +39,10 @@ assert.equal(staticHeaderMap.get("X-Content-Type-Options"), "nosniff");
 assert.equal(staticHeaderMap.get("Referrer-Policy"), "strict-origin-when-cross-origin");
 assert.ok(staticHeaderMap.has("Permissions-Policy"));
 assert.equal(staticHeaderMap.has("Content-Security-Policy"), false);
-assert.equal(HSTS_VALUE.includes("preload"), false);
-
-assert.equal(
-  shouldSetHsts({ hostname: "higher.zip", nodeEnv: "production", protocol: "https" }),
-  true,
-);
-for (const context of [
-  { hostname: "higher.zip", nodeEnv: "development", protocol: "https" },
-  { hostname: "higher.zip", nodeEnv: "production", protocol: "http" },
-  { hostname: "localhost", nodeEnv: "production", protocol: "https" },
-  { hostname: "127.0.0.1", nodeEnv: "production", protocol: "https" },
-]) {
-  assert.equal(shouldSetHsts(context), false);
-}
 
 const serializedHeaders = JSON.stringify({
   csp: REPORT_ONLY_CSP,
   headers: STATIC_SECURITY_HEADERS,
-  hsts: HSTS_VALUE,
 });
 for (const forbiddenServerName of [
   "PRIVY_APP_SECRET",
@@ -74,6 +57,12 @@ for (const forbiddenServerName of [
 const nextConfigSource = readFileSync(new URL("../next.config.ts", import.meta.url), "utf8");
 assert.match(nextConfigSource, /Content-Security-Policy-Report-Only/);
 assert.doesNotMatch(nextConfigSource, /key:\s*["']Content-Security-Policy["']/);
+assert.doesNotMatch(nextConfigSource, /Strict-Transport-Security/i);
+assert.equal(
+  existsSync(new URL("../middleware.ts", import.meta.url)),
+  false,
+  "No middleware should exist solely to add repository-managed HSTS",
+);
 
 const routeFiles = [
   "../src/app/.well-known/farcaster.json/route.ts",
