@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Address } from "viem";
 import {
   useAccount,
@@ -12,14 +12,7 @@ import { governanceAbi, governanceAddress } from "~/constants/abi-governance";
 import { switchChain } from "@wagmi/core";
 import { config } from "~/components/providers/WagmiProvider";
 import { useRequireWallet } from "~/lib/auth/useRequireWallet";
-
-import { createPublicClient, http } from "viem";
-import { mainnet } from "viem/chains";
-
-const client = createPublicClient({
-  chain: mainnet,
-  transport: http(),
-});
+import { useEnsNames } from "~/components/useEnsNames";
 
 export default function Squad() {
   const account = useAccount();
@@ -59,47 +52,7 @@ export default function Squad() {
   let totalWeight = 0n;
   weights.forEach((w) => (totalWeight += w));
 
-  const [ensMap, setEnsMap] = useState<Record<string, string | null>>({});
-
-  const ensCache = useRef<Record<string, string | null>>({}); // persistent cache
-
-  useEffect(() => {
-    let cancelled = false;
-    const unresolved = members.filter((addr) => !(addr in ensCache.current));
-    if (unresolved.length === 0) {
-      setEnsMap({ ...ensCache.current });
-      return;
-    }
-
-    const batchSize = 3; // Number of lookups per batch
-    const delay = 300; // ms between batches
-
-    const fetchBatch = async (start: number) => {
-      const batch = unresolved.slice(start, start + batchSize);
-      await Promise.all(
-        batch.map(async (address) => {
-          try {
-            const ensName = await client.getEnsName({
-              address: address as `0x${string}`,
-            });
-            ensCache.current[address] = ensName;
-          } catch {
-            ensCache.current[address] = null;
-          }
-        })
-      );
-      setEnsMap({ ...ensCache.current }); // update UI as each batch completes
-      if (!cancelled && start + batchSize < unresolved.length) {
-        setTimeout(() => fetchBatch(start + batchSize), delay);
-      }
-    };
-
-    fetchBatch(0);
-
-    return () => {
-      cancelled = true;
-    };
-  }, [members]);
+  const ensMap = useEnsNames(members);
 
   const decrease = async (newWeight: bigint) => {
     if (!(await requireWallet())) {

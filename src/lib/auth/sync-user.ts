@@ -1,9 +1,8 @@
 import "server-only";
 
 import type { User as PrivyUser } from "@privy-io/node";
-import { createPublicClient, http } from "viem";
-import { mainnet } from "viem/chains";
 import { prisma } from "~/lib/prisma";
+import { resolveEnsName } from "~/lib/ens";
 import { getPrivyEmail, getPrivyWallets } from "~/lib/auth/privy-server";
 import {
   generateUniqueUsername,
@@ -13,20 +12,6 @@ import type { AppUser } from "~/types/auth";
 
 const BASE_CHAIN_ID = 8453;
 const USER_SYNC_ATTEMPTS = 5;
-const mainnetRpcUrl = process.env.MAINNET_JSON_RPC_URL?.trim();
-const ensClient = createPublicClient({
-  chain: mainnet,
-  transport: mainnetRpcUrl ? http(mainnetRpcUrl) : http(),
-});
-
-async function resolveEnsName(address: string) {
-  try {
-    return await ensClient.getEnsName({ address: address as `0x${string}` });
-  } catch {
-    return null;
-  }
-}
-
 class WalletOwnershipError extends Error {
   constructor(address: string) {
     super(`Wallet ${address} is already linked to another user`);
