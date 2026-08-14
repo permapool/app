@@ -16,6 +16,7 @@ export type ClickerProps = {
   switchChannelDown: () => void;
   isMuted: boolean;
   toggleMute: () => void;
+  isPictureInPictureAvailable: boolean;
   className?: string;
 };
 
@@ -26,6 +27,7 @@ export default function NewClicker({
   switchChannelDown,
   isMuted,
   toggleMute,
+  isPictureInPictureAvailable,
   className,
 }: ClickerProps) {
   const [show, setShow] = useState(false);
@@ -103,6 +105,7 @@ export default function NewClicker({
         toggleMute();
         break;
       case "pip": {
+        if (!isPictureInPictureAvailable) break;
         const video = document.getElementById(
           "jumbotron"
         ) as HTMLVideoElement | null;
@@ -221,9 +224,11 @@ export default function NewClicker({
               <MenuItem onItemClick={handleItemClick} data="ch-">
                 CH -
               </MenuItem>
-              <MenuItem onItemClick={handleItemClick} data="pip">
-                ◲
-              </MenuItem>
+              {isPictureInPictureAvailable && (
+                <MenuItem onItemClick={handleItemClick} data="pip">
+                  ◲
+                </MenuItem>
+              )}
               <MenuItem onItemClick={handleItemClick} data="mute">
                 <Image
                   src={isMuted ? "/icons/sound-off.svg" : "/icons/sound-on.svg"}
