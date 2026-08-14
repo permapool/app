@@ -246,10 +246,33 @@ describe("AuthProvider request lifecycle", () => {
 
     expect(requests[0].signal?.aborted).toBe(true);
     expect(states).not.toContain("alice:ready");
+    expect(states).not.toContain("none:ready");
     expect(screen.getByLabelText("auth state")).toHaveTextContent("none:loading");
 
     await resolveRequest(1, appUser("bob"));
     expect(screen.getByLabelText("auth state")).toHaveTextContent("bob:ready");
+  });
+
+  it("requires a new settlement when identity returns from A to B to A", async () => {
+    const view = render(wrapper(<Probe />));
+    await waitForRequests(1);
+    await resolveRequest(0, appUser("first-a"));
+
+    privy.state.user = { id: "privy-b" };
+    view.rerender(wrapper(<Probe />));
+    await waitForRequests(2);
+
+    privy.state.user = { id: "privy-a" };
+    view.rerender(wrapper(<Probe />));
+    await waitForRequests(3);
+
+    expect(requests[1].signal?.aborted).toBe(true);
+    expect(screen.getByLabelText("auth state")).toHaveTextContent("none:loading");
+    await resolveRequest(1, appUser("stale-b"));
+    expect(screen.getByLabelText("auth state")).toHaveTextContent("none:loading");
+
+    await resolveRequest(2, appUser("second-a"));
+    expect(screen.getByLabelText("auth state")).toHaveTextContent("second-a:ready");
   });
 
   it("hides already committed state while a different identity synchronizes", async () => {
