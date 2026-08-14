@@ -4,7 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -20,6 +20,13 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+type CommittedAuthSnapshot = {
+  version: number;
+  ready: boolean;
+  authenticated: boolean;
+  identity: string | null;
+};
 
 async function fetchCurrentUser(accessToken: string, signal: AbortSignal) {
   const response = await fetch("/api/auth/session", {
@@ -41,26 +48,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { ready, authenticated, getAccessToken, user: privyUser } = usePrivy();
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const mountedRef = useRef(true);
+  const mountedRef = useRef(false);
+  const authSnapshotVersionRef = useRef(0);
+  const committedAuthSnapshotRef = useRef<CommittedAuthSnapshot | null>(null);
   const operationRef = useRef(0);
   const activeRequestRef = useRef<AbortController | null>(null);
   const committedIdentityRef = useRef<string | null>(null);
   const authIdentity = privyUser?.id ?? null;
 
-  const refreshUser = useCallback(async () => {
+  const synchronizeSnapshot = useCallback(async (snapshot: CommittedAuthSnapshot) => {
     const operationId = operationRef.current + 1;
     operationRef.current = operationId;
     activeRequestRef.current?.abort();
     activeRequestRef.current = null;
 
-    const ownsOperation = () =>
-      mountedRef.current && operationRef.current === operationId;
+    const ownsOperation = () => {
+      const committedSnapshot = committedAuthSnapshotRef.current;
 
-    if (!ready) {
+      return (
+        mountedRef.current &&
+        operationRef.current === operationId &&
+        committedSnapshot === snapshot &&
+        committedSnapshot.version === snapshot.version &&
+        committedSnapshot.ready === snapshot.ready &&
+        committedSnapshot.authenticated === snapshot.authenticated &&
+        committedSnapshot.identity === snapshot.identity
+      );
+    };
+
+    if (!snapshot.ready) {
+      if (ownsOperation()) setLoading(true);
       return;
     }
 
-    if (!authenticated) {
+    if (!snapshot.authenticated) {
       if (ownsOperation()) {
         committedIdentityRef.current = null;
         setUser(null);
@@ -87,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const currentUser = await fetchCurrentUser(accessToken, controller.signal);
       if (ownsOperation() && !controller.signal.aborted) {
-        committedIdentityRef.current = authIdentity;
+        committedIdentityRef.current = snapshot.identity;
         setUser(currentUser);
       }
     } catch {
@@ -99,29 +120,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       if (ownsOperation()) setLoading(false);
     }
-  }, [authenticated, authIdentity, getAccessToken, ready]);
+  }, [getAccessToken]);
 
-  useEffect(() => {
+  const refreshUser = useCallback(async () => {
+    const snapshot = committedAuthSnapshotRef.current;
+    if (!snapshot) return;
+
+    await synchronizeSnapshot(snapshot);
+  }, [synchronizeSnapshot]);
+
+  useLayoutEffect(() => {
+    const snapshot: CommittedAuthSnapshot = {
+      version: authSnapshotVersionRef.current + 1,
+      ready,
+      authenticated,
+      identity: authIdentity,
+    };
+    authSnapshotVersionRef.current = snapshot.version;
     mountedRef.current = true;
-    void refreshUser().catch(() => undefined);
+    committedAuthSnapshotRef.current = snapshot;
+    void synchronizeSnapshot(snapshot).catch(() => undefined);
 
     return () => {
+      if (committedAuthSnapshotRef.current !== snapshot) return;
+
       mountedRef.current = false;
+      committedAuthSnapshotRef.current = null;
       operationRef.current += 1;
       activeRequestRef.current?.abort();
       activeRequestRef.current = null;
     };
-  }, [refreshUser]);
+  }, [authenticated, authIdentity, ready, synchronizeSnapshot]);
 
   const value = useMemo(
     () => ({
-      // Logout and authenticated identity changes hide stale application state
-      // immediately; effect cleanup also invalidates the older operation.
+      // Readiness loss, logout, and identity changes hide stale application state
+      // immediately; the committed snapshot also invalidates the older operation.
       user:
-        authenticated && committedIdentityRef.current === authIdentity
+        ready &&
+        authenticated &&
+        committedIdentityRef.current === authIdentity
           ? user
           : null,
-      loading: authenticated ? loading : !ready,
+      loading: !ready || (authenticated ? loading : false),
       refreshUser,
     }),
     [authenticated, authIdentity, loading, ready, refreshUser, user],
