@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 
-import { StrictMode, useEffect, useState, type ReactNode } from "react";
+import {
+  StrictMode,
+  useEffect,
+  useLayoutEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AppUser } from "~/types/auth";
@@ -58,7 +64,13 @@ function responseFor(user: AppUser) {
   });
 }
 
-function Probe({ onState }: { onState?: (value: string) => void }) {
+function Probe({
+  onState,
+  onLayoutCommit,
+}: {
+  onState?: (value: string) => void;
+  onLayoutCommit?: (value: string) => void;
+}) {
   const { user, loading, refreshUser } = useAuth();
   const [result, setResult] = useState("idle");
   const value = `${user?.username ?? "none"}:${loading ? "loading" : "ready"}`;
@@ -66,6 +78,10 @@ function Probe({ onState }: { onState?: (value: string) => void }) {
   useEffect(() => {
     onState?.(value);
   }, [onState, value]);
+
+  useLayoutEffect(() => {
+    onLayoutCommit?.(value);
+  }, [onLayoutCommit, value]);
 
   return (
     <div>
@@ -210,6 +226,32 @@ describe("AuthProvider request lifecycle", () => {
     expect(screen.getByLabelText("auth state")).toHaveTextContent("bob:ready");
   });
 
+  it("invalidates identity A during the B commit before passive cleanup", async () => {
+    const states: string[] = [];
+    let resolveAOnCommit = false;
+    const onLayoutCommit = (state: string) => {
+      states.push(state);
+      if (resolveAOnCommit) {
+        resolveAOnCommit = false;
+        requests[0].resolve(responseFor(appUser("alice")));
+      }
+    };
+    const view = render(wrapper(<Probe onLayoutCommit={onLayoutCommit} />));
+    await waitForRequests(1);
+
+    resolveAOnCommit = true;
+    privy.state.user = { id: "privy-b" };
+    view.rerender(wrapper(<Probe onLayoutCommit={onLayoutCommit} />));
+    await waitForRequests(2);
+
+    expect(requests[0].signal?.aborted).toBe(true);
+    expect(states).not.toContain("alice:ready");
+    expect(screen.getByLabelText("auth state")).toHaveTextContent("none:loading");
+
+    await resolveRequest(1, appUser("bob"));
+    expect(screen.getByLabelText("auth state")).toHaveTextContent("bob:ready");
+  });
+
   it("hides already committed state while a different identity synchronizes", async () => {
     const view = render(wrapper(<Probe />));
     await waitForRequests(1);
@@ -235,6 +277,88 @@ describe("AuthProvider request lifecycle", () => {
     view.rerender(wrapper(<Probe />));
     await act(async () => requests[1].reject(new DOMException("Aborted", "AbortError")));
     expect(screen.getByLabelText("refresh result")).toHaveTextContent("done");
+  });
+
+  it("invalidates a deferred request during the logout commit", async () => {
+    const states: string[] = [];
+    let resolveOnLogout = false;
+    const onLayoutCommit = (state: string) => {
+      states.push(state);
+      if (resolveOnLogout) {
+        resolveOnLogout = false;
+        requests[0].resolve(responseFor(appUser("alice")));
+      }
+    };
+    const view = render(wrapper(<Probe onLayoutCommit={onLayoutCommit} />));
+    await waitForRequests(1);
+
+    resolveOnLogout = true;
+    privy.state.authenticated = false;
+    privy.state.user = null;
+    view.rerender(wrapper(<Probe onLayoutCommit={onLayoutCommit} />));
+
+    expect(requests[0].signal?.aborted).toBe(true);
+    expect(states).not.toContain("alice:ready");
+    expect(screen.getByLabelText("auth state")).toHaveTextContent("none:ready");
+  });
+
+  it("hides the user while not ready and resynchronizes when readiness returns", async () => {
+    const view = render(wrapper(<Probe />));
+    await waitForRequests(1);
+    await resolveRequest(0, appUser("alice"));
+
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    await waitForRequests(2);
+    privy.state.ready = false;
+    view.rerender(wrapper(<Probe />));
+
+    expect(requests[1].signal?.aborted).toBe(true);
+    expect(screen.getByLabelText("auth state")).toHaveTextContent("none:loading");
+    await resolveRequest(1, appUser("stale"));
+    expect(screen.getByLabelText("auth state")).toHaveTextContent("none:loading");
+
+    privy.state.ready = true;
+    view.rerender(wrapper(<Probe />));
+    await waitForRequests(3);
+    await resolveRequest(2, appUser("current"));
+    expect(screen.getByLabelText("auth state")).toHaveTextContent("current:ready");
+  });
+
+  it("settles logged out when readiness loss is followed by logout", async () => {
+    const view = render(wrapper(<Probe />));
+    await waitForRequests(1);
+
+    privy.state.ready = false;
+    view.rerender(wrapper(<Probe />));
+    expect(screen.getByLabelText("auth state")).toHaveTextContent("none:loading");
+
+    privy.state.authenticated = false;
+    privy.state.user = null;
+    view.rerender(wrapper(<Probe />));
+    expect(screen.getByLabelText("auth state")).toHaveTextContent("none:loading");
+
+    privy.state.ready = true;
+    view.rerender(wrapper(<Probe />));
+    expect(screen.getByLabelText("auth state")).toHaveTextContent("none:ready");
+    expect(requests).toHaveLength(1);
+  });
+
+  it("binds a manual refresh to the currently committed identity", async () => {
+    const view = render(wrapper(<Probe />));
+    await waitForRequests(1);
+    await resolveRequest(0, appUser("alice"));
+
+    privy.state.user = { id: "privy-b" };
+    view.rerender(wrapper(<Probe />));
+    await waitForRequests(2);
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    await waitForRequests(3);
+
+    expect(requests[1].signal?.aborted).toBe(true);
+    await resolveRequest(1, appUser("wrong-b"));
+    expect(screen.getByLabelText("auth state")).toHaveTextContent("none:loading");
+    await resolveRequest(2, appUser("bob"));
+    expect(screen.getByLabelText("auth state")).toHaveTextContent("bob:ready");
   });
 
   it("preserves the stable generic error for a current real failure", async () => {
