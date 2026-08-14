@@ -210,6 +210,20 @@ describe("AuthProvider request lifecycle", () => {
     expect(screen.getByLabelText("auth state")).toHaveTextContent("bob:ready");
   });
 
+  it("hides already committed state while a different identity synchronizes", async () => {
+    const view = render(wrapper(<Probe />));
+    await waitForRequests(1);
+    await resolveRequest(0, appUser("alice"));
+
+    privy.state.user = { id: "privy-b" };
+    view.rerender(wrapper(<Probe />));
+    expect(screen.getByLabelText("auth state")).toHaveTextContent("none:loading");
+
+    await waitForRequests(2);
+    await resolveRequest(1, appUser("bob"));
+    expect(screen.getByLabelText("auth state")).toHaveTextContent("bob:ready");
+  });
+
   it("does not surface an aborted request as a failure", async () => {
     const view = render(wrapper(<Probe />));
     await waitForRequests(1);

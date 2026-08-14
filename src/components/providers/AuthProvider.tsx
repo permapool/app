@@ -44,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const mountedRef = useRef(true);
   const operationRef = useRef(0);
   const activeRequestRef = useRef<AbortController | null>(null);
+  const committedIdentityRef = useRef<string | null>(null);
   const authIdentity = privyUser?.id ?? null;
 
   const refreshUser = useCallback(async () => {
@@ -61,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (!authenticated) {
       if (ownsOperation()) {
+        committedIdentityRef.current = null;
         setUser(null);
         setLoading(false);
       }
@@ -78,12 +80,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!ownsOperation() || controller.signal.aborted) return;
 
       if (!accessToken) {
+        committedIdentityRef.current = null;
         setUser(null);
         return;
       }
 
       const currentUser = await fetchCurrentUser(accessToken, controller.signal);
-      if (ownsOperation() && !controller.signal.aborted) setUser(currentUser);
+      if (ownsOperation() && !controller.signal.aborted) {
+        committedIdentityRef.current = authIdentity;
+        setUser(currentUser);
+      }
     } catch {
       if (!ownsOperation() || controller.signal.aborted) return;
       throw new Error("Failed to load current user");
@@ -109,13 +115,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(
     () => ({
-      // Privy logout hides authenticated application state in the same render;
-      // effect cleanup also invalidates any older session operation.
-      user: authenticated ? user : null,
+      // Logout and authenticated identity changes hide stale application state
+      // immediately; effect cleanup also invalidates the older operation.
+      user:
+        authenticated && committedIdentityRef.current === authIdentity
+          ? user
+          : null,
       loading: authenticated ? loading : !ready,
       refreshUser,
     }),
-    [authenticated, loading, ready, refreshUser, user],
+    [authenticated, authIdentity, loading, ready, refreshUser, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
