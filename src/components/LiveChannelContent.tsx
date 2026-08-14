@@ -9,14 +9,12 @@ type LiveChannelContentProps = {
   status: LiveVisualStatus;
   playbackId?: string;
   isMuted: boolean;
-  retryStatus: () => void;
 };
 
 export default function LiveChannelContent({
   status,
   playbackId,
   isMuted,
-  retryStatus,
 }: LiveChannelContentProps) {
   const [screensaverFailed, setScreensaverFailed] = useState(false);
   const [screensaverKey, setScreensaverKey] = useState(0);
@@ -54,23 +52,22 @@ export default function LiveChannelContent({
       role="status"
       aria-live="polite"
       aria-atomic="true"
+      aria-label="Broadcast status unavailable"
     >
-      <div className="pointer-events-auto text-center text-sm uppercase">
+      <div className="text-center text-sm uppercase">
         <p className="m-0 text-sm">Television signal unavailable</p>
-        <button
-          type="button"
-          className="mt-4 rounded bg-green px-4 py-2 text-xs text-white"
-          onClick={() => {
-            if (screensaverFailed) {
+        {screensaverFailed ? (
+          <button
+            type="button"
+            className="mt-4 rounded bg-green px-4 py-2 text-xs text-white"
+            onClick={() => {
               setScreensaverFailed(false);
               setScreensaverKey((value) => value + 1);
-            } else {
-              retryStatus();
-            }
-          }}
-        >
-          Retry
-        </button>
+            }}
+          >
+            Restart animation
+          </button>
+        ) : null}
       </div>
     </div>
   );

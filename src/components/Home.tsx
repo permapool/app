@@ -238,7 +238,6 @@ export default function Home() {
                 status={liveStatus.status}
                 playbackId={playbackId}
                 isMuted={isMuted}
-                retryStatus={liveStatus.retry}
               />
             ) : null}
           </Television>

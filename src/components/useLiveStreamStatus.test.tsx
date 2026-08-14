@@ -28,15 +28,51 @@ describe("useLiveStreamStatus", () => {
     await waitFor(() => expect(result.current.status).toBe(status));
   });
 
-  it("shows an initial error and retry returns through checking", async () => {
+  it.each(["offline", "live"] as const)(
+    "automatically recovers from an initial error to %s after fifteen seconds",
+    async (recoveredStatus) => {
+      vi.useFakeTimers();
+      vi.mocked(fetch)
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ status: "error" }), { status: 503 }),
+        )
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ status: recoveredStatus }), { status: 200 }),
+        );
+      const { result } = renderHook(() => useLiveStreamStatus());
+      await act(async () => Promise.resolve());
+      expect(result.current.status).toBe("error");
+
+      await act(async () => vi.advanceTimersByTimeAsync(LIVE_STATUS_POLL_MS - 1));
+      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(result.current.status).toBe("error");
+
+      await act(async () => vi.advanceTimersByTimeAsync(1));
+      expect(fetch).toHaveBeenCalledTimes(2);
+      expect(result.current.status).toBe(recoveredStatus);
+    },
+  );
+
+  it("does not overlap automatic retries after an initial error", async () => {
+    vi.useFakeTimers();
+    let resolveSecond!: (response: Response) => void;
     vi.mocked(fetch)
       .mockResolvedValueOnce(new Response(JSON.stringify({ status: "error" }), { status: 503 }))
-      .mockResolvedValueOnce(new Response(JSON.stringify({ status: "offline" }), { status: 200 }));
+      .mockImplementationOnce(
+        () => new Promise<Response>((resolve) => (resolveSecond = resolve)),
+      );
     const { result } = renderHook(() => useLiveStreamStatus());
-    await waitFor(() => expect(result.current.status).toBe("error"));
-    act(() => result.current.retry());
-    expect(result.current.status).toBe("checking");
-    await waitFor(() => expect(result.current.status).toBe("offline"));
+    await act(async () => Promise.resolve());
+    expect(result.current.status).toBe("error");
+
+    await act(async () => vi.advanceTimersByTimeAsync(LIVE_STATUS_POLL_MS));
+    expect(fetch).toHaveBeenCalledTimes(2);
+    await act(async () => vi.advanceTimersByTimeAsync(LIVE_STATUS_POLL_MS * 2));
+    expect(fetch).toHaveBeenCalledTimes(2);
+
+    resolveSecond(new Response(JSON.stringify({ status: "offline" }), { status: 200 }));
+    await act(async () => Promise.resolve());
+    expect(result.current.status).toBe("offline");
   });
 
   it("retains the last known state after a transient error", async () => {
@@ -74,13 +110,18 @@ describe("useLiveStreamStatus", () => {
     expect(fetch).toHaveBeenCalledTimes(2);
   });
 
-  it("pauses while hidden and refreshes immediately when visible", async () => {
+  it("pauses initial-error retries while hidden and starts one request when visible", async () => {
     vi.useFakeTimers();
-    vi.mocked(fetch).mockResolvedValue(
-      new Response(JSON.stringify({ status: "offline" }), { status: 200 }),
-    );
-    renderHook(() => useLiveStreamStatus());
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ status: "error" }), { status: 503 }),
+      )
+      .mockResolvedValue(
+        new Response(JSON.stringify({ status: "offline" }), { status: 200 }),
+      );
+    const { result } = renderHook(() => useLiveStreamStatus());
     await act(async () => Promise.resolve());
+    expect(result.current.status).toBe("error");
     hidden = true;
     act(() => document.dispatchEvent(new Event("visibilitychange")));
     await act(async () => vi.advanceTimersByTimeAsync(LIVE_STATUS_POLL_MS * 2));
@@ -91,6 +132,7 @@ describe("useLiveStreamStatus", () => {
       await Promise.resolve();
     });
     expect(fetch).toHaveBeenCalledTimes(2);
+    expect(result.current.status).toBe("offline");
     expect(vi.getTimerCount()).toBe(1);
   });
 

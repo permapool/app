@@ -68,12 +68,6 @@ export function useLiveStreamStatus(enabled = true) {
     }
   }, [clearTimer, enabled]);
 
-  const retry = useCallback(() => {
-    if (!lastKnown.current) setStatus("checking");
-    setIsStale(false);
-    void poll();
-  }, [poll]);
-
   useEffect(() => {
     mounted.current = true;
     if (enabled) void poll();
@@ -102,5 +96,5 @@ export function useLiveStreamStatus(enabled = true) {
     };
   }, [clearTimer, enabled, poll]);
 
-  return { status, isStale, retry };
+  return { status, isStale };
 }

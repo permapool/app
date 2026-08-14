@@ -14,7 +14,7 @@ vi.mock("./Pipes", () => ({
 
 import LiveChannelContent from "./LiveChannelContent";
 
-const props = { playbackId: "public-playback", isMuted: true, retryStatus: vi.fn() };
+const props = { playbackId: "public-playback", isMuted: true };
 
 describe("LiveChannelContent", () => {
   it("does not flash the player or screensaver while checking", () => {
@@ -36,19 +36,19 @@ describe("LiveChannelContent", () => {
     expect(screen.queryByTestId("pipes")).not.toBeInTheDocument();
   });
 
-  it("shows a recoverable fallback for status and WebGL failures", () => {
-    const retryStatus = vi.fn();
-    const { rerender } = render(
-      <LiveChannelContent {...props} retryStatus={retryStatus} status="error" />,
-    );
-    expect(screen.getByRole("status")).toHaveAttribute("aria-live", "polite");
-    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
-    expect(retryStatus).toHaveBeenCalledOnce();
+  it("shows a noninteractive, stable status for initial and WebGL failures", () => {
+    const { rerender } = render(<LiveChannelContent {...props} status="error" />);
+    const status = screen.getByRole("status", { name: "Broadcast status unavailable" });
+    expect(status).toHaveAttribute("aria-live", "polite");
+    expect(screen.queryByRole("button", { name: "Retry" })).not.toBeInTheDocument();
 
-    rerender(<LiveChannelContent {...props} retryStatus={retryStatus} status="offline" />);
+    rerender(<LiveChannelContent {...props} status="error" />);
+    expect(screen.getByRole("status", { name: "Broadcast status unavailable" })).toBe(status);
+
+    rerender(<LiveChannelContent {...props} status="offline" />);
     fireEvent.click(screen.getByRole("button", { name: "fail-webgl" }));
     expect(screen.getByText("Television signal unavailable")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+    fireEvent.click(screen.getByRole("button", { name: "Restart animation" }));
     expect(screen.getByTestId("pipes")).toBeInTheDocument();
   });
 });
