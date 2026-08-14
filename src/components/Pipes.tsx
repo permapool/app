@@ -16,15 +16,23 @@ type Pipe = {
   targetDistance: number;
   segmentsCount: number;
   maxSegments: number;
+  material: THREE.MeshPhongMaterial;
 };
 
-const GRID_SIZE = 20;
-const BOUNDS = 400;
-const PIPE_RADIUS = 8;
-const SPEED_PER_SECOND = 1_200;
-const RESET_TIME_MS = 32_000;
-const FADE_DURATION_MS = 1_000;
-const MAX_DYNAMIC_MESHES = 256;
+export const GRID_SIZE = 20;
+export const BOUNDS = 400;
+export const PIPE_RADIUS = 8;
+export const MAX_PIPES = 1;
+export const ORIGINAL_SPEED_PER_FRAME = 20;
+export const NOMINAL_FRAMES_PER_SECOND = 60;
+export const SPEED_PER_SECOND = ORIGINAL_SPEED_PER_FRAME * NOMINAL_FRAMES_PER_SECOND;
+export const RESET_TIME_MS = 32_000;
+export const FADE_DURATION_MS = 1_000;
+export const MIN_SEGMENT_GRID_UNITS = 2;
+export const MAX_SEGMENT_GRID_UNITS = 6;
+export const MIN_PIPE_SEGMENTS = 40;
+export const MAX_PIPE_SEGMENTS = 120;
+export const MAX_DYNAMIC_MESHES = 1_200;
 const MAX_DELTA_SECONDS = 0.1;
 
 export const PIPE_COLORS = [
@@ -37,7 +45,7 @@ export const PIPE_COLORS = [
   0x7cffa6,
 ] as const;
 
-const DIRECTIONS = [
+export const DIRECTIONS = [
   new THREE.Vector3(1, 0, 0),
   new THREE.Vector3(-1, 0, 0),
   new THREE.Vector3(0, 1, 0),
@@ -46,14 +54,68 @@ const DIRECTIONS = [
   new THREE.Vector3(0, 0, -1),
 ];
 
+const PIPE_AXIS = new THREE.Vector3(0, 1, 0);
+
+export function elapsedGrowth(deltaSeconds: number) {
+  return SPEED_PER_SECOND * Math.min(Math.max(deltaSeconds, 0), MAX_DELTA_SECONDS);
+}
+
+export function isImmediateReverse(direction: THREE.Vector3, previous: THREE.Vector3) {
+  return direction.x === -previous.x &&
+    direction.y === -previous.y &&
+    direction.z === -previous.z;
+}
+
+export function segmentDistanceFromUnitRandom(value: number) {
+  const unit = Math.min(Math.max(value, 0), 1 - Number.EPSILON);
+  const gridUnits = Math.floor(
+    unit * (MAX_SEGMENT_GRID_UNITS - MIN_SEGMENT_GRID_UNITS + 1),
+  ) + MIN_SEGMENT_GRID_UNITS;
+  return gridUnits * GRID_SIZE;
+}
+
+export function pipeSegmentCountFromUnitRandom(value: number) {
+  const unit = Math.min(Math.max(value, 0), 1 - Number.EPSILON);
+  return Math.floor(unit * (MAX_PIPE_SEGMENTS - MIN_PIPE_SEGMENTS + 1)) +
+    MIN_PIPE_SEGMENTS;
+}
+
+export function segmentEndpoint(
+  start: THREE.Vector3,
+  direction: THREE.Vector3,
+  distance: number,
+) {
+  return start.clone().addScaledVector(direction, distance);
+}
+
+export function orientPipeAlongDirection(
+  mesh: THREE.Mesh,
+  direction: THREE.Vector3,
+) {
+  mesh.quaternion.setFromUnitVectors(PIPE_AXIS, direction);
+}
+
+export function setPipeGrowth(mesh: THREE.Mesh, distance: number) {
+  mesh.scale.y = distance;
+}
+
+export function shouldStartComplexityFade(meshCount: number) {
+  return meshCount + 2 >= MAX_DYNAMIC_MESHES;
+}
+
+export function regularFadeOpacity(cycleElapsedMs: number) {
+  if (cycleElapsedMs < RESET_TIME_MS - FADE_DURATION_MS) return 0;
+  return Math.min(
+    Math.max((cycleElapsedMs - (RESET_TIME_MS - FADE_DURATION_MS)) /
+      FADE_DURATION_MS, 0),
+    1,
+  );
+}
+
 function random() {
   const values = new Uint32Array(1);
   crypto.getRandomValues(values);
   return values[0] / 2 ** 32;
-}
-
-function randomInt(min: number, max: number) {
-  return Math.round(random() * (max - min) + min);
 }
 
 export default function Pipes({ onError }: PipesProps) {
@@ -97,14 +159,10 @@ export default function Pipes({ onError }: PipesProps) {
     const endpointGeometry = new THREE.SphereGeometry(PIPE_RADIUS * 1.25, 24, 24);
     const jointGeometry = new THREE.SphereGeometry(PIPE_RADIUS, 24, 24);
     const pipeGeometry = new THREE.CylinderGeometry(PIPE_RADIUS, PIPE_RADIUS, 1, 24);
+    // CylinderGeometry grows along local +Y. Translating its shared geometry by
+    // half its unit height anchors each mesh at the preceding path endpoint.
     pipeGeometry.translate(0, 0.5, 0);
-    pipeGeometry.rotateX(Math.PI / 2);
     const fadeGeometry = new THREE.PlaneGeometry(2_000, 2_000);
-    const pipeMaterial = new THREE.MeshPhongMaterial({
-      color: PIPE_COLORS[Math.floor(random() * PIPE_COLORS.length)],
-      shininess: 30,
-      specular: 0x3f3f3f,
-    });
     const fadeMaterial = new THREE.MeshBasicMaterial({
       color: 0x000000,
       transparent: true,
@@ -116,7 +174,10 @@ export default function Pipes({ onError }: PipesProps) {
 
     const occupiedPositions = new Set<string>();
     const dynamicMeshes: THREE.Mesh[] = [];
+    const pipeMaterials: THREE.MeshPhongMaterial[] = [];
     let pipe: Pipe | null = null;
+    let complexityFadeRequested = false;
+    let earlyFadeStartedAt: number | null = null;
 
     const positionKey = (position: THREE.Vector3) =>
       `${Math.round(position.x)},${Math.round(position.y)},${Math.round(position.z)}`;
@@ -128,8 +189,22 @@ export default function Pipes({ onError }: PipesProps) {
       fadeMesh.rotation.y = -scene.rotation.y;
     };
 
-    const addMesh = (geometry: THREE.BufferGeometry, position: THREE.Vector3) => {
-      const mesh = new THREE.Mesh(geometry, pipeMaterial);
+    const createPipeMaterial = () => {
+      const material = new THREE.MeshPhongMaterial({
+        color: PIPE_COLORS[Math.floor(random() * PIPE_COLORS.length)],
+        shininess: 30,
+        specular: 0x3f3f3f,
+      });
+      pipeMaterials.push(material);
+      return material;
+    };
+
+    const addMesh = (
+      geometry: THREE.BufferGeometry,
+      position: THREE.Vector3,
+      material: THREE.MeshPhongMaterial,
+    ) => {
+      const mesh = new THREE.Mesh(geometry, material);
       mesh.position.copy(position);
       scene.add(mesh);
       dynamicMeshes.push(mesh);
@@ -139,6 +214,8 @@ export default function Pipes({ onError }: PipesProps) {
     const clearDynamicMeshes = () => {
       for (const mesh of dynamicMeshes) scene.remove(mesh);
       dynamicMeshes.length = 0;
+      for (const material of pipeMaterials) material.dispose();
+      pipeMaterials.length = 0;
     };
 
     const isPathClear = (
@@ -179,11 +256,11 @@ export default function Pipes({ onError }: PipesProps) {
 
     const chooseMove = (start: THREE.Vector3, current?: THREE.Vector3) => {
       const choices = DIRECTIONS.filter(
-        (direction) => !current || !direction.equals(current.clone().negate()),
+        (direction) => !current || !isImmediateReverse(direction, current),
       ).sort(() => random() - 0.5);
 
       for (const direction of choices) {
-        const distance = randomInt(2, 6) * GRID_SIZE;
+        const distance = segmentDistanceFromUnitRandom(random());
         if (isPathClear(start, direction, distance)) return { direction, distance };
       }
       return null;
@@ -194,9 +271,9 @@ export default function Pipes({ onError }: PipesProps) {
       let available = false;
       for (let attempt = 0; attempt < 100; attempt += 1) {
         start = new THREE.Vector3(
-          Math.floor((random() * BOUNDS - BOUNDS / 2) / GRID_SIZE) * GRID_SIZE,
-          Math.floor((random() * BOUNDS - BOUNDS / 2) / GRID_SIZE) * GRID_SIZE,
-          Math.floor((random() * BOUNDS - BOUNDS / 2) / GRID_SIZE) * GRID_SIZE,
+          Math.round((random() * BOUNDS * 2 - BOUNDS) / GRID_SIZE) * GRID_SIZE,
+          Math.round((random() * BOUNDS * 2 - BOUNDS) / GRID_SIZE) * GRID_SIZE,
+          Math.round((random() * BOUNDS * 2 - BOUNDS) / GRID_SIZE) * GRID_SIZE,
         );
         if (!occupiedPositions.has(positionKey(start))) {
           available = true;
@@ -207,19 +284,21 @@ export default function Pipes({ onError }: PipesProps) {
 
       const move = chooseMove(start);
       if (!move) return null;
+      const material = createPipeMaterial();
       occupiedPositions.add(positionKey(start));
       reservePath(start, move.direction, move.distance);
-      addMesh(endpointGeometry, start);
+      addMesh(endpointGeometry, start, material);
 
       return {
         currentPos: start,
         direction: move.direction,
-        targetPos: start.clone().add(move.direction.clone().multiplyScalar(move.distance)),
+        targetPos: segmentEndpoint(start, move.direction, move.distance),
         currentMesh: null,
         distanceTraveled: 0,
         targetDistance: move.distance,
         segmentsCount: 0,
-        maxSegments: randomInt(40, 120),
+        maxSegments: pipeSegmentCountFromUnitRandom(random()),
+        material,
       };
     };
 
@@ -227,12 +306,11 @@ export default function Pipes({ onError }: PipesProps) {
       clearDynamicMeshes();
       occupiedPositions.clear();
       fadeMaterial.opacity = 0;
-      pipeMaterial.color.setHex(
-        PIPE_COLORS[Math.floor(random() * PIPE_COLORS.length)],
-      );
       scene.rotation.y = random() * (Math.PI / 2) - Math.PI / 4;
       updateFadePosition();
       pipe = createPipe();
+      complexityFadeRequested = false;
+      earlyFadeStartedAt = null;
       cycleStartedAt = performance.now();
     };
 
@@ -241,39 +319,57 @@ export default function Pipes({ onError }: PipesProps) {
       const move = chooseMove(activePipe.currentPos, activePipe.direction);
       if (!move) return false;
 
-      addMesh(jointGeometry, activePipe.currentPos);
+      addMesh(jointGeometry, activePipe.currentPos, activePipe.material);
       activePipe.direction = move.direction;
       activePipe.targetDistance = move.distance;
-      activePipe.targetPos = activePipe.currentPos
-        .clone()
-        .add(move.direction.clone().multiplyScalar(move.distance));
+      activePipe.targetPos = segmentEndpoint(
+        activePipe.currentPos,
+        move.direction,
+        move.distance,
+      );
       activePipe.distanceTraveled = 0;
       activePipe.currentMesh = null;
       reservePath(activePipe.currentPos, move.direction, move.distance);
       return true;
     };
 
-    const advancePipe = (deltaSeconds: number) => {
-      if (!pipe) return;
-      if (!pipe.currentMesh) {
-        pipe.currentMesh = addMesh(pipeGeometry, pipe.currentPos);
-        pipe.currentMesh.lookAt(pipe.currentPos.clone().add(pipe.direction));
-      }
-
-      pipe.distanceTraveled += SPEED_PER_SECOND * deltaSeconds;
-      if (pipe.distanceTraveled < pipe.targetDistance) {
-        pipe.currentMesh.scale.z = pipe.distanceTraveled;
+    const capPipe = (activePipe: Pipe, respawn = true) => {
+      addMesh(endpointGeometry, activePipe.currentPos, activePipe.material);
+      if (!respawn || shouldStartComplexityFade(dynamicMeshes.length)) {
+        pipe = null;
+        complexityFadeRequested = true;
         return;
       }
+      pipe = createPipe();
+      if (!pipe) complexityFadeRequested = true;
+    };
 
-      pipe.currentMesh.scale.z = pipe.targetDistance;
-      pipe.currentPos.copy(pipe.targetPos);
-      pipe.segmentsCount += 1;
-      if (!chooseNextMove(pipe)) {
-        addMesh(endpointGeometry, pipe.currentPos);
-        pipe = createPipe();
+    const advancePipe = (deltaSeconds: number) => {
+      let remainingGrowth = elapsedGrowth(deltaSeconds);
+
+      while (pipe && remainingGrowth > 0 && !complexityFadeRequested) {
+        if (!pipe.currentMesh) {
+          pipe.currentMesh = addMesh(pipeGeometry, pipe.currentPos, pipe.material);
+          orientPipeAlongDirection(pipe.currentMesh, pipe.direction);
+        }
+
+        const distanceRemaining = pipe.targetDistance - pipe.distanceTraveled;
+        const step = Math.min(distanceRemaining, remainingGrowth);
+        pipe.distanceTraveled += step;
+        remainingGrowth -= step;
+        setPipeGrowth(pipe.currentMesh, pipe.distanceTraveled);
+
+        if (pipe.distanceTraveled < pipe.targetDistance) continue;
+
+        pipe.currentPos.copy(pipe.targetPos);
+        pipe.segmentsCount += 1;
+
+        if (shouldStartComplexityFade(dynamicMeshes.length)) {
+          capPipe(pipe, false);
+        } else if (!chooseNextMove(pipe)) {
+          capPipe(pipe);
+        }
       }
-      if (dynamicMeshes.length >= MAX_DYNAMIC_MESHES) resetScene();
     };
 
     const renderStaticScene = () => {
@@ -291,11 +387,16 @@ export default function Pipes({ onError }: PipesProps) {
         MAX_DELTA_SECONDS,
       );
       lastFrameTime = timestamp;
-      const elapsed = timestamp - cycleStartedAt;
+      if (complexityFadeRequested && earlyFadeStartedAt === null) {
+        earlyFadeStartedAt = timestamp;
+      }
+      const fadeStartedAt = earlyFadeStartedAt ??
+        cycleStartedAt + RESET_TIME_MS - FADE_DURATION_MS;
+      const fadeElapsed = timestamp - fadeStartedAt;
 
-      if (elapsed >= RESET_TIME_MS) resetScene();
-      else if (RESET_TIME_MS - elapsed <= FADE_DURATION_MS) {
-        fadeMaterial.opacity = 1 - (RESET_TIME_MS - elapsed) / FADE_DURATION_MS;
+      if (fadeElapsed >= FADE_DURATION_MS) resetScene();
+      else if (fadeElapsed >= 0) {
+        fadeMaterial.opacity = fadeElapsed / FADE_DURATION_MS;
       } else {
         fadeMaterial.opacity = 0;
         advancePipe(deltaSeconds);
@@ -371,7 +472,6 @@ export default function Pipes({ onError }: PipesProps) {
       jointGeometry.dispose();
       pipeGeometry.dispose();
       fadeGeometry.dispose();
-      pipeMaterial.dispose();
       fadeMaterial.dispose();
       renderer.renderLists.dispose();
       renderer.dispose();

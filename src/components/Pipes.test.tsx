@@ -36,7 +36,31 @@ vi.mock("three", async (importOriginal) => {
   return { ...actual, WebGLRenderer };
 });
 
-import Pipes, { PIPE_COLORS } from "./Pipes";
+import Pipes, {
+  DIRECTIONS,
+  FADE_DURATION_MS,
+  GRID_SIZE,
+  MAX_DYNAMIC_MESHES,
+  MAX_PIPE_SEGMENTS,
+  MAX_PIPES,
+  MAX_SEGMENT_GRID_UNITS,
+  MIN_PIPE_SEGMENTS,
+  MIN_SEGMENT_GRID_UNITS,
+  NOMINAL_FRAMES_PER_SECOND,
+  ORIGINAL_SPEED_PER_FRAME,
+  PIPE_COLORS,
+  RESET_TIME_MS,
+  SPEED_PER_SECOND,
+  elapsedGrowth,
+  isImmediateReverse,
+  orientPipeAlongDirection,
+  pipeSegmentCountFromUnitRandom,
+  regularFadeOpacity,
+  segmentDistanceFromUnitRandom,
+  segmentEndpoint,
+  setPipeGrowth,
+  shouldStartComplexityFade,
+} from "./Pipes";
 import * as THREE from "three";
 
 let resizeCallback: ResizeObserverCallback;
@@ -48,6 +72,23 @@ let motionAddListener: ReturnType<typeof vi.fn>;
 let motionRemoveListener: ReturnType<typeof vi.fn>;
 const animationCallbacks = new Map<number, FrameRequestCallback>();
 let nextAnimationId = 1;
+
+function runNextAnimationFrame(timestamp: number) {
+  const next = animationCallbacks.entries().next().value as
+    | [number, FrameRequestCallback]
+    | undefined;
+  if (!next) throw new Error("No animation frame is scheduled");
+  animationCallbacks.delete(next[0]);
+  next[1](timestamp);
+}
+
+function dynamicMeshCount(renderer: (typeof rendererMock.instances)[number]) {
+  const lastRender = renderer.render.mock.calls.at(-1);
+  const scene = lastRender?.[0] as THREE.Scene | undefined;
+  return scene?.children.filter((child) =>
+    child instanceof THREE.Mesh &&
+    !(child.geometry instanceof THREE.PlaneGeometry)).length ?? 0;
+}
 
 describe("Pipes", () => {
   beforeEach(() => {
@@ -106,6 +147,130 @@ describe("Pipes", () => {
       const blue = color & 0xff;
       expect(green).toBeGreaterThan(red);
       expect(green).toBeGreaterThan(blue);
+    }
+  });
+
+  it("preserves the original one-pipe grid and segment ranges", () => {
+    expect(MAX_PIPES).toBe(1);
+    expect(DIRECTIONS).toHaveLength(6);
+    for (const direction of DIRECTIONS) {
+      const nonzeroAxes = [direction.x, direction.y, direction.z]
+        .filter((component) => component !== 0);
+      expect(nonzeroAxes).toHaveLength(1);
+      expect(Math.abs(nonzeroAxes[0])).toBe(1);
+    }
+
+    expect(segmentDistanceFromUnitRandom(0)).toBe(MIN_SEGMENT_GRID_UNITS * GRID_SIZE);
+    expect(segmentDistanceFromUnitRandom(1)).toBe(MAX_SEGMENT_GRID_UNITS * GRID_SIZE);
+    expect(pipeSegmentCountFromUnitRandom(0)).toBe(MIN_PIPE_SEGMENTS);
+    expect(pipeSegmentCountFromUnitRandom(1)).toBe(MAX_PIPE_SEGMENTS);
+  });
+
+  it("excludes only the immediate reverse direction", () => {
+    for (const previous of DIRECTIONS) {
+      const reversals = DIRECTIONS.filter((candidate) =>
+        isImmediateReverse(candidate, previous));
+      expect(reversals).toHaveLength(1);
+      expect(reversals[0].equals(previous.clone().negate())).toBe(true);
+    }
+  });
+
+  it("keeps consecutive segment endpoints and turn joints connected", () => {
+    const start = new THREE.Vector3(20, -40, 60);
+    const firstDirection = new THREE.Vector3(1, 0, 0);
+    const turnDirection = new THREE.Vector3(0, 1, 0);
+    const joint = segmentEndpoint(start, firstDirection, 4 * GRID_SIZE);
+    const secondEnd = segmentEndpoint(joint, turnDirection, 3 * GRID_SIZE);
+
+    expect(joint).toEqual(new THREE.Vector3(100, -40, 60));
+    expect(secondEnd).toEqual(new THREE.Vector3(100, 20, 60));
+  });
+
+  it("anchors a growing cylinder at its start and extends it along local Y", () => {
+    const geometry = new THREE.CylinderGeometry(8, 8, 1, 8);
+    geometry.translate(0, 0.5, 0);
+    const mesh = new THREE.Mesh(geometry);
+    const start = new THREE.Vector3(40, 20, -60);
+    const direction = new THREE.Vector3(0, 0, -1);
+    mesh.position.copy(start);
+    orientPipeAlongDirection(mesh, direction);
+    setPipeGrowth(mesh, 80);
+    mesh.updateMatrixWorld(true);
+
+    expect(new THREE.Vector3(0, 0, 0).applyMatrix4(mesh.matrixWorld).distanceTo(start))
+      .toBeLessThan(1e-10);
+    expect(
+      new THREE.Vector3(0, 1, 0).applyMatrix4(mesh.matrixWorld)
+        .distanceTo(segmentEndpoint(start, direction, 80)),
+    ).toBeLessThan(1e-10);
+    geometry.dispose();
+  });
+
+  it("converts the original frame speed to deterministic elapsed-time growth", () => {
+    expect(SPEED_PER_SECOND).toBe(
+      ORIGINAL_SPEED_PER_FRAME * NOMINAL_FRAMES_PER_SECOND,
+    );
+    expect(elapsedGrowth(1 / NOMINAL_FRAMES_PER_SECOND)).toBeCloseTo(
+      ORIGINAL_SPEED_PER_FRAME,
+      10,
+    );
+    expect(elapsedGrowth(1)).toBe(SPEED_PER_SECOND * 0.1);
+  });
+
+  it("fades only at the end of the cycle and uses a whole-scene safety bound", () => {
+    expect(regularFadeOpacity(RESET_TIME_MS - FADE_DURATION_MS - 1)).toBe(0);
+    expect(regularFadeOpacity(RESET_TIME_MS - FADE_DURATION_MS / 2)).toBe(0.5);
+    expect(regularFadeOpacity(RESET_TIME_MS)).toBe(1);
+    expect(shouldStartComplexityFade(MAX_DYNAMIC_MESHES - 3)).toBe(false);
+    expect(shouldStartComplexityFade(MAX_DYNAMIC_MESHES - 2)).toBe(true);
+  });
+
+  it("retains complete accumulated paths until the whole-scene reset", () => {
+    render(<Pipes onError={vi.fn()} />);
+    const renderer = rendererMock.instances[0];
+    const startedAt = performance.now();
+    let previousCount = 0;
+
+    act(() => runNextAnimationFrame(startedAt));
+    for (let elapsed = 100; elapsed <= 30_000; elapsed += 100) {
+      act(() => runNextAnimationFrame(startedAt + elapsed));
+      const count = dynamicMeshCount(renderer);
+      expect(count).toBeGreaterThanOrEqual(previousCount);
+      previousCount = count;
+    }
+
+    expect(previousCount).toBeGreaterThan(80);
+    act(() => runNextAnimationFrame(startedAt + 31_500));
+    expect(dynamicMeshCount(renderer)).toBe(previousCount);
+    act(() => runNextAnimationFrame(startedAt + 32_100));
+    expect(dynamicMeshCount(renderer)).toBeLessThan(previousCount);
+  });
+
+  it("renders connected segments with a joint at each shared turn", () => {
+    render(<Pipes onError={vi.fn()} />);
+    const renderer = rendererMock.instances[0];
+    const startedAt = performance.now();
+    act(() => runNextAnimationFrame(startedAt));
+    act(() => runNextAnimationFrame(startedAt + 100));
+
+    const scene = renderer.render.mock.calls.at(-1)?.[0] as THREE.Scene;
+    const cylinders = scene.children.filter((child): child is THREE.Mesh =>
+      child instanceof THREE.Mesh &&
+      child.geometry instanceof THREE.CylinderGeometry);
+    const spheres = scene.children.filter((child): child is THREE.Mesh =>
+      child instanceof THREE.Mesh &&
+      child.geometry instanceof THREE.SphereGeometry);
+    expect(cylinders.length).toBeGreaterThanOrEqual(1);
+
+    const first = cylinders[0];
+    first.updateMatrixWorld(true);
+    const start = new THREE.Vector3(0, 0, 0).applyMatrix4(first.matrixWorld);
+    const end = new THREE.Vector3(0, 1, 0).applyMatrix4(first.matrixWorld);
+    expect(spheres.some((sphere) => sphere.position.distanceTo(start) < 1e-10)).toBe(true);
+    expect(spheres.some((sphere) => sphere.position.distanceTo(end) < 1e-10)).toBe(true);
+
+    if (cylinders.length > 1) {
+      expect(cylinders[1].position.distanceTo(end)).toBeLessThan(1e-10);
     }
   });
 
