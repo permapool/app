@@ -79,6 +79,7 @@ export default function Pipes({ onError }: PipesProps) {
 
     renderer.setClearColor(0x000000, 1);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    renderer.domElement.className = "block h-full w-full pointer-events-none";
     container.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();

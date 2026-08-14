@@ -8,6 +8,7 @@ const rendererMock = vi.hoisted(() => ({
   fail: false,
   instances: [] as Array<{
     domElement: HTMLCanvasElement;
+    setPixelRatio: ReturnType<typeof vi.fn>;
     setSize: ReturnType<typeof vi.fn>;
     render: ReturnType<typeof vi.fn>;
     renderLists: { dispose: ReturnType<typeof vi.fn> };
@@ -111,7 +112,9 @@ describe("Pipes", () => {
   it("owns and sizes its canvas inside the component container", () => {
     const { container } = render(<Pipes onError={vi.fn()} />);
     const wrapper = container.firstElementChild as HTMLDivElement;
-    expect(wrapper.querySelectorAll("canvas")).toHaveLength(1);
+    const canvas = wrapper.querySelector("canvas");
+    expect(canvas).toBeInTheDocument();
+    expect(canvas).toHaveClass("block", "h-full", "w-full", "pointer-events-none");
     expect(document.body.querySelectorAll("canvas")).toHaveLength(1);
     vi.spyOn(wrapper, "getBoundingClientRect").mockReturnValue({
       width: 640, height: 360, top: 0, left: 0, right: 640, bottom: 360, x: 0, y: 0,
@@ -119,6 +122,15 @@ describe("Pipes", () => {
     });
     act(() => resizeCallback([], {} as ResizeObserver));
     expect(rendererMock.instances[0].setSize).toHaveBeenLastCalledWith(640, 360, false);
+  });
+
+  it("keeps CSS fill sizing independent from the capped drawing-buffer ratio", () => {
+    vi.stubGlobal("devicePixelRatio", 3);
+    const { container } = render(<Pipes onError={vi.fn()} />);
+    const canvas = container.querySelector("canvas");
+    expect(rendererMock.instances[0].setPixelRatio).toHaveBeenCalledWith(1.5);
+    expect(canvas).toHaveClass("block", "h-full", "w-full");
+    expect(canvas?.getAttribute("style")).toBeNull();
   });
 
   it("renders a static scene for reduced motion", () => {
@@ -157,7 +169,9 @@ describe("Pipes", () => {
     const { container, unmount } = render(
       <StrictMode><Pipes onError={vi.fn()} /></StrictMode>,
     );
-    expect(container.querySelectorAll("canvas")).toHaveLength(1);
+    const canvases = container.querySelectorAll("canvas");
+    expect(canvases).toHaveLength(1);
+    expect(canvases[0]).toHaveClass("block", "h-full", "w-full", "pointer-events-none");
     expect(animationCallbacks.size).toBe(1);
     unmount();
     expect(document.querySelector("canvas")).not.toBeInTheDocument();
