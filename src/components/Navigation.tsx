@@ -164,7 +164,7 @@ export default function Navigation() {
                 aria-label={isMuted ? "Unmute audio" : "Mute audio"}
                 aria-pressed={isMuted}
                 onClick={toggleMute}
-                className="bg-black text-white px-3 py-2 h-full flex items-center justify-center border border-black hover:bg-[green] transition-colors"
+                className="bg-black text-white px-3 py-2 h-full flex items-center justify-center border border-transparent hover:bg-[green] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--green)]"
               >
                 <Image
                   src={isMuted ? "/icons/sound-off.svg" : "/icons/sound-on.svg"}
