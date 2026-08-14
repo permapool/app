@@ -28,6 +28,42 @@ type CommittedAuthSnapshot = {
   identity: string | null;
 };
 
+type AuthPresentationStatus =
+  | "not-ready"
+  | "logged-out"
+  | "syncing"
+  | "settled"
+  | "error";
+
+type AuthPresentation = CommittedAuthSnapshot & {
+  status: AuthPresentationStatus;
+  user: AppUser | null;
+  userGeneration: number | null;
+};
+
+const initialPresentation: AuthPresentation = {
+  version: 0,
+  ready: false,
+  authenticated: false,
+  identity: null,
+  status: "not-ready",
+  user: null,
+  userGeneration: null,
+};
+
+function presentationFor(
+  snapshot: CommittedAuthSnapshot,
+  status: AuthPresentationStatus,
+  user: AppUser | null = null,
+): AuthPresentation {
+  return {
+    ...snapshot,
+    status,
+    user,
+    userGeneration: status === "settled" ? snapshot.version : null,
+  };
+}
+
 async function fetchCurrentUser(accessToken: string, signal: AbortSignal) {
   const response = await fetch("/api/auth/session", {
     headers: {
@@ -46,14 +82,12 @@ async function fetchCurrentUser(accessToken: string, signal: AbortSignal) {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { ready, authenticated, getAccessToken, user: privyUser } = usePrivy();
-  const [user, setUser] = useState<AppUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [presentation, setPresentation] = useState(initialPresentation);
   const mountedRef = useRef(false);
   const authSnapshotVersionRef = useRef(0);
   const committedAuthSnapshotRef = useRef<CommittedAuthSnapshot | null>(null);
   const operationRef = useRef(0);
   const activeRequestRef = useRef<AbortController | null>(null);
-  const committedIdentityRef = useRef<string | null>(null);
   const authIdentity = privyUser?.id ?? null;
 
   const synchronizeSnapshot = useCallback(async (snapshot: CommittedAuthSnapshot) => {
@@ -77,20 +111,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     if (!snapshot.ready) {
-      if (ownsOperation()) setLoading(true);
+      if (ownsOperation()) {
+        setPresentation(presentationFor(snapshot, "not-ready"));
+      }
       return;
     }
 
     if (!snapshot.authenticated) {
       if (ownsOperation()) {
-        committedIdentityRef.current = null;
-        setUser(null);
-        setLoading(false);
+        setPresentation(presentationFor(snapshot, "logged-out"));
       }
       return;
     }
 
-    if (ownsOperation()) setLoading(true);
+    if (ownsOperation()) {
+      setPresentation(presentationFor(snapshot, "syncing"));
+    }
 
     const controller = new AbortController();
     activeRequestRef.current = controller;
@@ -101,24 +137,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!ownsOperation() || controller.signal.aborted) return;
 
       if (!accessToken) {
-        committedIdentityRef.current = null;
-        setUser(null);
+        if (ownsOperation()) {
+          setPresentation(presentationFor(snapshot, "settled"));
+        }
         return;
       }
 
       const currentUser = await fetchCurrentUser(accessToken, controller.signal);
       if (ownsOperation() && !controller.signal.aborted) {
-        committedIdentityRef.current = snapshot.identity;
-        setUser(currentUser);
+        setPresentation(presentationFor(snapshot, "settled", currentUser));
       }
     } catch {
       if (!ownsOperation() || controller.signal.aborted) return;
+      setPresentation(presentationFor(snapshot, "error"));
       throw new Error("Failed to load current user");
     } finally {
       if (activeRequestRef.current === controller) {
         activeRequestRef.current = null;
       }
-      if (ownsOperation()) setLoading(false);
     }
   }, [getAccessToken]);
 
@@ -153,19 +189,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [authenticated, authIdentity, ready, synchronizeSnapshot]);
 
   const value = useMemo(
-    () => ({
-      // Readiness loss, logout, and identity changes hide stale application state
-      // immediately; the committed snapshot also invalidates the older operation.
-      user:
-        ready &&
-        authenticated &&
-        committedIdentityRef.current === authIdentity
-          ? user
-          : null,
-      loading: !ready || (authenticated ? loading : false),
-      refreshUser,
-    }),
-    [authenticated, authIdentity, loading, ready, refreshUser, user],
+    () => {
+      const tupleMatches =
+        presentation.ready === ready &&
+        presentation.authenticated === authenticated &&
+        presentation.identity === authIdentity;
+
+      if (!ready) return { user: null, loading: true, refreshUser };
+      if (!authenticated) return { user: null, loading: false, refreshUser };
+      if (!tupleMatches) return { user: null, loading: true, refreshUser };
+
+      const settledForCurrentGeneration =
+        presentation.status === "settled" &&
+        presentation.userGeneration === presentation.version;
+
+      return {
+        user: settledForCurrentGeneration ? presentation.user : null,
+        loading:
+          presentation.status === "syncing" || presentation.status === "not-ready",
+        refreshUser,
+      };
+    },
+    [authenticated, authIdentity, presentation, ready, refreshUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
