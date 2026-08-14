@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { MinimizeMenusProvider } from "~/components/providers/MinimizeMenus";
 import { MuteProvider } from "~/components/providers/MuteContext";
+import PrivyAuthProvider from "~/components/providers/PrivyAuthProvider";
 import { ToggleProvider } from "~/components/providers/ToggleContext";
 
 const Navigation = dynamic(() => import("~/components/Navigation"), {
@@ -15,13 +16,15 @@ export default function Client({
   children: React.ReactNode;
 }>) {
   return (
-    <MinimizeMenusProvider>
-      <ToggleProvider>
-        <MuteProvider>
-          <Navigation />
-          {children}
-        </MuteProvider>
-      </ToggleProvider>
-    </MinimizeMenusProvider>
+    <PrivyAuthProvider>
+      <MinimizeMenusProvider>
+        <ToggleProvider>
+          <MuteProvider>
+            <Navigation />
+            {children}
+          </MuteProvider>
+        </ToggleProvider>
+      </MinimizeMenusProvider>
+    </PrivyAuthProvider>
   );
 }

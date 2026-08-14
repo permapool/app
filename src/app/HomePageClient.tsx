@@ -3,7 +3,6 @@
 import dynamic from "next/dynamic";
 import HomeInitialLoader from "~/components/HomeInitialLoader";
 import { Room } from "~/app/Room";
-import PrivyAuthProvider from "~/components/providers/PrivyAuthProvider";
 
 const Home = dynamic(() => import("~/components/Home"), {
   ssr: false,
@@ -12,10 +11,8 @@ const Home = dynamic(() => import("~/components/Home"), {
 
 export default function HomePageClient() {
   return (
-    <PrivyAuthProvider>
-      <Room>
-        <Home />
-      </Room>
-    </PrivyAuthProvider>
+    <Room>
+      <Home />
+    </Room>
   );
 }

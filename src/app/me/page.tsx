@@ -3,7 +3,6 @@
 import { FormEvent, useMemo, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { useAuth } from "~/components/providers/AuthProvider";
-import PrivyAuthProvider from "~/components/providers/PrivyAuthProvider";
 
 function shortenAddress(address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -151,9 +150,5 @@ function MePageContent() {
 }
 
 export default function MePage() {
-  return (
-    <PrivyAuthProvider>
-      <MePageContent />
-    </PrivyAuthProvider>
-  );
+  return <MePageContent />;
 }
