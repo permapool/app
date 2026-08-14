@@ -145,6 +145,10 @@ This plan does not authorize changing deployed Privy settings. Dashboard and dep
 - Vercel Preview Toolbar `vercel.live` script and frame violations are intentionally unresolved tooling noise and do not expand the application policy. `frame-ancestors 'self'` remains report-only and is not enforcement-ready until actual Farcaster host embedding is tested.
 - A one-off Privy iframe-ready queue error observed during clean staging testing is non-blocking and must be reproduced or cleared during embedded-wallet end-to-end verification; this observation does not authorize authentication changes.
 - Embedded-wallet creation remains disabled with `createOnLogin: "off"` pending the separately approved wallet-creation and recovery slice.
+- Livepeer's documented `isActive` field is the v1 live/offline authority. The browser polls a minimal same-origin status boundary every 15 seconds while visible; five-second shared HTTP caching plus five-second server-reader caching bounds the conservative worst-case transition latency at 25 seconds and prevents each viewer poll from independently reaching Livepeer.
+- The live player mounts only after a `live` result. `checking` retains the television shell, `offline` renders the local pipes screensaver without starting HLS, and an initial `error` presents a recoverable retry. A transient error after a successful result marks status stale internally while retaining the last known live/offline visual state.
+- The locally bundled Three.js screensaver adds no CSP origins. It uses container-relative sizing, pauses while hidden, provides a static reduced-motion scene, bounds retained objects, and fully releases WebGL and browser lifecycle resources during teardown and React Strict Mode remounts.
+- The television state boundary reserves a future `tivo` mode that can reuse the same shell; no TiVo behavior is implemented in this slice.
 
 ### Wallet and network boundaries
 

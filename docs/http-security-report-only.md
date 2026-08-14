@@ -17,6 +17,10 @@ This phase adds an observable HTTP security baseline without enforcing Content S
 
 No Slice API, printer, Farstore, Livepeer Studio management API, database, or notification origin is in `connect-src`: those requests are server-to-server. The Livepeer playback origins above are browser-side requirements observed during staging playback. Slice product image origins are response data and are intentionally not guessed; report-only staging observations must identify any current image origin before enforcement.
 
+The live television now asks a same-origin status endpoint for Livepeer's documented `isActive` value before mounting the browser player. A five-second shared response cache and five-second server-reader cache coalesce status traffic; visible clients poll every 15 seconds, producing a conservative 25-second worst-case live/offline transition latency. Polling pauses while hidden and refreshes immediately on visibility. An initial status failure shows a retryable error, while a later transient failure retains the last known live or offline presentation and continues polling. Offline state never mounts the HLS player, preventing the previous repeated offline-manifest requests.
+
+The offline presentation uses locally bundled Three.js and a WebGL canvas, so it requires no new CSP source. It pauses while hidden, renders a static scene for reduced-motion users, bounds retained scene objects, and disposes animation, observer, listener, renderer, geometry, and material resources on teardown or Strict Mode remount.
+
 The Vercel Preview Toolbar produced `vercel.live` script and frame violations during staging validation. Those violations are tooling noise rather than production application requirements, so `vercel.live` is intentionally absent from every directive. The toolbar and Vercel configuration are unchanged.
 
 ## Temporary directives and enforcement path
