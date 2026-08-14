@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -20,12 +21,13 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-async function fetchCurrentUser(accessToken: string) {
+async function fetchCurrentUser(accessToken: string, signal: AbortSignal) {
   const response = await fetch("/api/auth/session", {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
     cache: "no-store",
+    signal,
   });
 
   if (!response.ok) {
@@ -36,49 +38,84 @@ async function fetchCurrentUser(accessToken: string) {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { ready, authenticated, getAccessToken } = usePrivy();
+  const { ready, authenticated, getAccessToken, user: privyUser } = usePrivy();
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const mountedRef = useRef(true);
+  const operationRef = useRef(0);
+  const activeRequestRef = useRef<AbortController | null>(null);
+  const authIdentity = privyUser?.id ?? null;
 
   const refreshUser = useCallback(async () => {
+    const operationId = operationRef.current + 1;
+    operationRef.current = operationId;
+    activeRequestRef.current?.abort();
+    activeRequestRef.current = null;
+
+    const ownsOperation = () =>
+      mountedRef.current && operationRef.current === operationId;
+
     if (!ready) {
       return;
     }
 
     if (!authenticated) {
-      setUser(null);
-      setLoading(false);
+      if (ownsOperation()) {
+        setUser(null);
+        setLoading(false);
+      }
       return;
     }
 
-    setLoading(true);
+    if (ownsOperation()) setLoading(true);
+
+    const controller = new AbortController();
+    activeRequestRef.current = controller;
 
     try {
       const accessToken = await getAccessToken();
+
+      if (!ownsOperation() || controller.signal.aborted) return;
 
       if (!accessToken) {
         setUser(null);
         return;
       }
 
-      const currentUser = await fetchCurrentUser(accessToken);
-      setUser(currentUser);
+      const currentUser = await fetchCurrentUser(accessToken, controller.signal);
+      if (ownsOperation() && !controller.signal.aborted) setUser(currentUser);
+    } catch {
+      if (!ownsOperation() || controller.signal.aborted) return;
+      throw new Error("Failed to load current user");
     } finally {
-      setLoading(false);
+      if (activeRequestRef.current === controller) {
+        activeRequestRef.current = null;
+      }
+      if (ownsOperation()) setLoading(false);
     }
-  }, [authenticated, getAccessToken, ready]);
+  }, [authenticated, authIdentity, getAccessToken, ready]);
 
   useEffect(() => {
-    void refreshUser();
+    mountedRef.current = true;
+    void refreshUser().catch(() => undefined);
+
+    return () => {
+      mountedRef.current = false;
+      operationRef.current += 1;
+      activeRequestRef.current?.abort();
+      activeRequestRef.current = null;
+    };
   }, [refreshUser]);
 
   const value = useMemo(
     () => ({
-      user,
-      loading,
+      // Privy logout hides authenticated application state in the same render;
+      // effect cleanup also invalidates any older session operation.
+      user: authenticated ? user : null,
+      loading: authenticated ? loading : !ready,
       refreshUser,
     }),
-    [loading, refreshUser, user],
+    [authenticated, loading, ready, refreshUser, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
