@@ -5,10 +5,16 @@ import { ReactNode, useEffect, useRef } from 'react';
 type TelevisionProps = {
   src?: string;     
   isMuted: boolean;
-  children?: ReactNode; 
+  children?: ReactNode;
+  contentMode?: 'default' | 'offline';
 };
 
-export default function Television({ src, isMuted, children }: TelevisionProps) {
+export default function Television({
+  src,
+  isMuted,
+  children,
+  contentMode = 'default',
+}: TelevisionProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
@@ -28,8 +34,12 @@ export default function Television({ src, isMuted, children }: TelevisionProps) 
       
       {children ? (
         <div
-          className="absolute z-10 pointer-events-none object-contain"
-          style={{ top: '5%', left: '0%', width: '100%', height: '90%' }}
+          className={contentMode === 'offline'
+            ? 'absolute inset-0 z-10 h-full w-full pointer-events-none'
+            : 'absolute z-10 pointer-events-none object-contain'}
+          style={contentMode === 'offline'
+            ? undefined
+            : { top: '5%', left: '0%', width: '100%', height: '90%' }}
         >
           {children}
         </div>

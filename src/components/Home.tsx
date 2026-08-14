@@ -232,6 +232,11 @@ export default function Home() {
           <Television
             isMuted={isMuted}
             src={current.type === "vod" ? current.src : undefined}
+            contentMode={
+              current.type === "live" && liveStatus.status === "offline"
+                ? "offline"
+                : "default"
+            }
           >
             {current.type === "live" ? (
               <LiveChannelContent
