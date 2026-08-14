@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { act, renderHook, waitFor } from "@testing-library/react";
+import { StrictMode, type ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LIVE_STATUS_POLL_MS, useLiveStreamStatus } from "./useLiveStreamStatus";
 
@@ -90,5 +91,52 @@ describe("useLiveStreamStatus", () => {
       await Promise.resolve();
     });
     expect(fetch).toHaveBeenCalledTimes(2);
+    expect(vi.getTimerCount()).toBe(1);
+  });
+
+  it("passes an AbortSignal, aborts on unmount, and ignores late completion", async () => {
+    let resolveRequest!: (response: Response) => void;
+    vi.mocked(fetch).mockImplementationOnce(
+      () => new Promise<Response>((resolve) => (resolveRequest = resolve)),
+    );
+    const { result, unmount } = renderHook(() => useLiveStreamStatus());
+    const signal = vi.mocked(fetch).mock.calls[0][1]?.signal;
+    expect(signal).toBeInstanceOf(AbortSignal);
+    expect(signal?.aborted).toBe(false);
+
+    unmount();
+    expect(signal?.aborted).toBe(true);
+    resolveRequest(new Response(JSON.stringify({ status: "live" }), { status: 200 }));
+    await act(async () => Promise.resolve());
+    expect(result.current.status).toBe("checking");
+  });
+
+  it("leaves one poll schedule and listener under Strict Mode", async () => {
+    vi.useFakeTimers();
+    const addListener = vi.spyOn(document, "addEventListener");
+    const removeListener = vi.spyOn(document, "removeEventListener");
+    vi.mocked(fetch).mockResolvedValue(
+      new Response(JSON.stringify({ status: "offline" }), { status: 200 }),
+    );
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <StrictMode>{children}</StrictMode>
+    );
+    const { unmount } = renderHook(() => useLiveStreamStatus(), { wrapper });
+    await act(async () => Promise.resolve());
+
+    expect(vi.getTimerCount()).toBe(1);
+    const visibilityAdds = addListener.mock.calls.filter(
+      ([type]) => type === "visibilitychange",
+    ).length;
+    const visibilityRemovals = removeListener.mock.calls.filter(
+      ([type]) => type === "visibilitychange",
+    ).length;
+    expect(visibilityAdds - visibilityRemovals).toBe(1);
+
+    unmount();
+    expect(vi.getTimerCount()).toBe(0);
+    expect(
+      removeListener.mock.calls.filter(([type]) => type === "visibilitychange"),
+    ).toHaveLength(visibilityAdds);
   });
 });

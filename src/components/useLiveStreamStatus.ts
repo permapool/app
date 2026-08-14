@@ -34,7 +34,8 @@ export function useLiveStreamStatus(enabled = true) {
 
     try {
       const response = await fetch("/api/live-status", {
-        cache: "no-store",
+        // This cancels only this viewer's same-origin request. The server uses
+        // its own deadline so one disconnect cannot cancel shared provider work.
         signal: nextController.signal,
       });
       const payload: StatusResponse = await response.json();
@@ -44,6 +45,11 @@ export function useLiveStreamStatus(enabled = true) {
       ) {
         throw new Error("Live status unavailable");
       }
+      if (
+        nextController.signal.aborted ||
+        !mounted.current ||
+        requestSequence.current !== requestId
+      ) return;
 
       lastKnown.current = payload.status;
       setStatus(payload.status);

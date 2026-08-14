@@ -10,6 +10,7 @@ const rendererMock = vi.hoisted(() => ({
     domElement: HTMLCanvasElement;
     setSize: ReturnType<typeof vi.fn>;
     render: ReturnType<typeof vi.fn>;
+    renderLists: { dispose: ReturnType<typeof vi.fn> };
     dispose: ReturnType<typeof vi.fn>;
     forceContextLoss: ReturnType<typeof vi.fn>;
   }>,
@@ -35,10 +36,15 @@ vi.mock("three", async (importOriginal) => {
 });
 
 import Pipes, { PIPE_COLORS } from "./Pipes";
+import * as THREE from "three";
 
 let resizeCallback: ResizeObserverCallback;
+let resizeDisconnect: ReturnType<typeof vi.fn>;
 let reducedMotion = false;
 let hidden = false;
+let motionChange: ((event: MediaQueryListEvent) => void) | undefined;
+let motionAddListener: ReturnType<typeof vi.fn>;
+let motionRemoveListener: ReturnType<typeof vi.fn>;
 const animationCallbacks = new Map<number, FrameRequestCallback>();
 let nextAnimationId = 1;
 
@@ -50,11 +56,17 @@ describe("Pipes", () => {
     hidden = false;
     animationCallbacks.clear();
     nextAnimationId = 1;
+    resizeDisconnect = vi.fn();
+    motionChange = undefined;
+    motionAddListener = vi.fn((type, listener) => {
+      if (type === "change") motionChange = listener;
+    });
+    motionRemoveListener = vi.fn();
     Object.defineProperty(document, "hidden", { configurable: true, get: () => hidden });
     vi.stubGlobal("ResizeObserver", class {
       constructor(callback: ResizeObserverCallback) { resizeCallback = callback; }
       observe = vi.fn();
-      disconnect = vi.fn();
+      disconnect = resizeDisconnect;
       unobserve = vi.fn();
     });
     vi.stubGlobal("requestAnimationFrame", vi.fn((callback: FrameRequestCallback) => {
@@ -67,8 +79,8 @@ describe("Pipes", () => {
       matches: reducedMotion,
       media: "(prefers-reduced-motion: reduce)",
       onchange: null,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
+      addEventListener: motionAddListener,
+      removeEventListener: motionRemoveListener,
       addListener: vi.fn(),
       removeListener: vi.fn(),
       dispatchEvent: vi.fn(),
@@ -116,6 +128,15 @@ describe("Pipes", () => {
     expect(rendererMock.instances[0].render).toHaveBeenCalled();
   });
 
+  it("responds to reduced-motion preference changes without duplicate loops", () => {
+    render(<Pipes onError={vi.fn()} />);
+    expect(animationCallbacks.size).toBe(1);
+    act(() => motionChange?.({ matches: true } as MediaQueryListEvent));
+    expect(animationCallbacks.size).toBe(0);
+    act(() => motionChange?.({ matches: false } as MediaQueryListEvent));
+    expect(animationCallbacks.size).toBe(1);
+  });
+
   it("pauses animation while hidden and disposes all renderer work", () => {
     const { unmount } = render(<Pipes onError={vi.fn()} />);
     expect(requestAnimationFrame).toHaveBeenCalledOnce();
@@ -124,7 +145,10 @@ describe("Pipes", () => {
     expect(cancelAnimationFrame).toHaveBeenCalled();
     const renderer = rendererMock.instances[0];
     unmount();
+    expect(resizeDisconnect).toHaveBeenCalledOnce();
+    expect(motionRemoveListener).toHaveBeenCalledWith("change", expect.any(Function));
     expect(renderer.dispose).toHaveBeenCalledOnce();
+    expect(renderer.renderLists.dispose).toHaveBeenCalledOnce();
     expect(renderer.forceContextLoss).toHaveBeenCalledOnce();
     expect(document.querySelector("canvas")).not.toBeInTheDocument();
   });
@@ -134,9 +158,41 @@ describe("Pipes", () => {
       <StrictMode><Pipes onError={vi.fn()} /></StrictMode>,
     );
     expect(container.querySelectorAll("canvas")).toHaveLength(1);
+    expect(animationCallbacks.size).toBe(1);
     unmount();
     expect(document.querySelector("canvas")).not.toBeInTheDocument();
     expect(rendererMock.instances.every((renderer) => renderer.dispose.mock.calls.length === 1)).toBe(true);
+  });
+
+  it("disposes shared geometries and materials exactly once per mount", () => {
+    const geometryDispose = vi.spyOn(THREE.BufferGeometry.prototype, "dispose");
+    const materialDispose = vi.spyOn(THREE.Material.prototype, "dispose");
+    const { unmount } = render(<Pipes onError={vi.fn()} />);
+    unmount();
+    expect(geometryDispose).toHaveBeenCalledTimes(4);
+    expect(materialDispose).toHaveBeenCalledTimes(2);
+  });
+
+  it("ignores an already queued resize callback after teardown", () => {
+    const { unmount } = render(<Pipes onError={vi.fn()} />);
+    const renderer = rendererMock.instances[0];
+    const callsBeforeUnmount = renderer.setSize.mock.calls.length;
+    unmount();
+    act(() => resizeCallback([], {} as ResizeObserver));
+    expect(renderer.setSize).toHaveBeenCalledTimes(callsBeforeUnmount);
+  });
+
+  it("reports WebGL context loss and removes the listener on teardown", () => {
+    const onError = vi.fn();
+    const { unmount } = render(<Pipes onError={onError} />);
+    const canvas = rendererMock.instances[0].domElement;
+    const removeListener = vi.spyOn(canvas, "removeEventListener");
+    const event = new Event("webglcontextlost", { cancelable: true });
+    act(() => canvas.dispatchEvent(event));
+    expect(event.defaultPrevented).toBe(true);
+    expect(onError).toHaveBeenCalledOnce();
+    unmount();
+    expect(removeListener).toHaveBeenCalledWith("webglcontextlost", expect.any(Function));
   });
 
   it("reports WebGL initialization failure", () => {

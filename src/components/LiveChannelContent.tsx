@@ -27,7 +27,15 @@ export default function LiveChannelContent({
   }, [status]);
 
   if (status === "checking") {
-    return <div className="h-full w-full bg-[#111]" aria-label="Checking broadcast status" />;
+    return (
+      <div
+        className="h-full w-full bg-[#111]"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        aria-label="Checking broadcast status"
+      />
+    );
   }
   if (status === "live" && playbackId) {
     return (
@@ -41,7 +49,12 @@ export default function LiveChannelContent({
   }
 
   return (
-    <div className="flex h-full w-full items-center justify-center bg-black text-white">
+    <div
+      className="flex h-full w-full items-center justify-center bg-black text-white"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
       <div className="pointer-events-auto text-center text-sm uppercase">
         <p className="m-0 text-sm">Television signal unavailable</p>
         <button

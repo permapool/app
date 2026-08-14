@@ -19,7 +19,10 @@ const props = { playbackId: "public-playback", isMuted: true, retryStatus: vi.fn
 describe("LiveChannelContent", () => {
   it("does not flash the player or screensaver while checking", () => {
     render(<LiveChannelContent {...props} status="checking" />);
-    expect(screen.getByLabelText("Checking broadcast status")).toBeInTheDocument();
+    expect(screen.getByRole("status", { name: "Checking broadcast status" })).toHaveAttribute(
+      "aria-live",
+      "polite",
+    );
     expect(screen.queryByTestId("live-player")).not.toBeInTheDocument();
     expect(screen.queryByTestId("pipes")).not.toBeInTheDocument();
   });
@@ -38,6 +41,7 @@ describe("LiveChannelContent", () => {
     const { rerender } = render(
       <LiveChannelContent {...props} retryStatus={retryStatus} status="error" />,
     );
+    expect(screen.getByRole("status")).toHaveAttribute("aria-live", "polite");
     fireEvent.click(screen.getByRole("button", { name: "Retry" }));
     expect(retryStatus).toHaveBeenCalledOnce();
 

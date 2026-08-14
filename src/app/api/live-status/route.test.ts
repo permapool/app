@@ -19,13 +19,24 @@ describe("GET /api/live-status", () => {
     const response = await GET();
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ status });
-    expect(response.headers.get("cache-control")).toContain("s-maxage=5");
+    expect(response.headers.get("cache-control")).toBe(
+      "public, max-age=0, must-revalidate",
+    );
+    expect(response.headers.get("vercel-cdn-cache-control")).toBe(
+      "public, max-age=5",
+    );
   });
 
   it("sanitizes provider failures", async () => {
     livepeerMock.fetchLiveStatus.mockResolvedValue({ status: "error" });
     const response = await GET();
     expect(response.status).toBe(503);
-    expect(await response.json()).toEqual({ status: "error" });
+    const body = await response.json();
+    expect(body).toEqual({ status: "error" });
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect(response.headers.has("vercel-cdn-cache-control")).toBe(false);
+    expect(JSON.stringify(body)).not.toMatch(
+      /timeout|provider|stream|playback|token|credential/i,
+    );
   });
 });

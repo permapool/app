@@ -11,10 +11,12 @@ type LiveStatusReaderOptions = {
   getConfig?: () => { apiKey?: string; streamId?: string };
   now?: () => number;
   cacheTtlMs?: number;
+  providerTimeoutMs?: number;
 };
 
 const LIVEPEER_API_BASE = "https://livepeer.studio/api";
 export const LIVE_STATUS_CACHE_TTL_MS = 5_000;
+export const LIVE_STATUS_PROVIDER_TIMEOUT_MS = 5_000;
 
 export function createLiveStatusReader({
   fetchImpl = fetch,
@@ -24,6 +26,7 @@ export function createLiveStatusReader({
   }),
   now = Date.now,
   cacheTtlMs = LIVE_STATUS_CACHE_TTL_MS,
+  providerTimeoutMs = LIVE_STATUS_PROVIDER_TIMEOUT_MS,
 }: LiveStatusReaderOptions = {}) {
   let cached: { expiresAt: number; result: LiveStatusResult } | null = null;
   let inFlight: Promise<LiveStatusResult> | null = null;
@@ -31,6 +34,9 @@ export function createLiveStatusReader({
   const readProvider = async (): Promise<LiveStatusResult> => {
     const { apiKey, streamId } = getConfig();
     if (!apiKey || !streamId) return { status: "error" };
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), providerTimeoutMs);
 
     try {
       const response = await fetchImpl(`${LIVEPEER_API_BASE}/stream/${streamId}`, {
@@ -40,6 +46,7 @@ export function createLiveStatusReader({
           "Content-Type": "application/json",
         },
         cache: "no-store",
+        signal: controller.signal,
       });
 
       if (!response.ok) return { status: "error" };
@@ -58,6 +65,8 @@ export function createLiveStatusReader({
       };
     } catch {
       return { status: "error" };
+    } finally {
+      clearTimeout(timeout);
     }
   };
 
@@ -67,7 +76,11 @@ export function createLiveStatusReader({
     if (inFlight) return inFlight;
 
     inFlight = readProvider().then((result) => {
-      cached = { expiresAt: now() + cacheTtlMs, result };
+      // Errors are intentionally not retained: the next request can recover
+      // immediately. Successful results get a short, per-runtime cache.
+      cached = result.status === "error"
+        ? null
+        : { expiresAt: now() + cacheTtlMs, result };
       return result;
     });
 

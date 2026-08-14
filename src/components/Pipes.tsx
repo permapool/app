@@ -317,6 +317,7 @@ export default function Pipes({ onError }: PipesProps) {
     };
 
     const resize = () => {
+      if (disposed) return;
       const { width, height } = container.getBoundingClientRect();
       if (width <= 0 || height <= 0) return;
       camera.aspect = width / height;
