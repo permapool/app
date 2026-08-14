@@ -12,8 +12,8 @@ import { useMute } from "./providers/MuteContext";
 import { useToggle } from "./providers/ToggleContext";
 
 import Toaster, { ToasterRef } from "./ui/Toast";
-import Pipes from "./Pipes";
-import { useLiveStreamStatus, type LiveVisualStatus } from "./useLiveStreamStatus";
+import LiveChannelContent from "./LiveChannelContent";
+import { useLiveStreamStatus } from "./useLiveStreamStatus";
 
 const Permapool = dynamic(() => import("./Permapool"), {
   loading: () => <div className="p-4 text-xs uppercase">Loading permapool...</div>,
@@ -28,7 +28,6 @@ const Manifesto = dynamic(() => import("./Manifesto"), {
   loading: () => <div className="p-4 text-xs uppercase">Loading manifesto...</div>,
 });
 const Television = dynamic(() => import("./Television"));
-const Live = dynamic(() => import("./Live"));
 const Chat = dynamic(() => import("./ui/Chat"), {
   ssr: false,
 });
@@ -36,7 +35,7 @@ const Chat = dynamic(() => import("./ui/Chat"), {
 type VodChannel = { type: "vod"; src: string };
 type LiveChannel = { type: "live" };
 type Channel = VodChannel | LiveChannel;
-type TelevisionMode = LiveVisualStatus | "tivo";
+type TelevisionMode = ReturnType<typeof useLiveStreamStatus>["status"] | "tivo";
 
 const channels: Channel[] = [
   { type: "live" },
@@ -122,61 +121,11 @@ export default function Home() {
   const playbackId = process.env.NEXT_PUBLIC_LIVEPEER_PLAYBACK_ID as string;
   const current = channels[channelIdx];
   const liveStatus = useLiveStreamStatus(current.type === "live");
-  const [screensaverFailed, setScreensaverFailed] = useState(false);
-  const [screensaverKey, setScreensaverKey] = useState(0);
   const toasterRef = useRef<ToasterRef>(null);
 
   const televisionMode: TelevisionMode = liveStatus.status;
   const hasVideo =
     current.type === "vod" || (televisionMode === "live" && Boolean(playbackId));
-  const handleScreensaverError = useCallback(() => setScreensaverFailed(true), []);
-
-  useEffect(() => {
-    if (televisionMode !== "offline") setScreensaverFailed(false);
-  }, [televisionMode]);
-
-  const renderLiveChannel = () => {
-    if (televisionMode === "checking") {
-      return <div className="h-full w-full bg-[#111]" aria-label="Checking broadcast status" />;
-    }
-    if (televisionMode === "live" && playbackId) {
-      return (
-        <div className="flex h-screen flex-col items-center justify-center md:block md:h-auto">
-          <Live playbackId={playbackId} isMuted={isMuted} />
-        </div>
-      );
-    }
-    if (televisionMode === "offline" && !screensaverFailed) {
-      return (
-        <Pipes
-          key={screensaverKey}
-          onError={handleScreensaverError}
-        />
-      );
-    }
-
-    return (
-      <div className="flex h-full w-full items-center justify-center bg-black text-white">
-        <div className="pointer-events-auto text-center text-sm uppercase">
-          <p className="m-0 text-sm">Television signal unavailable</p>
-          <button
-            type="button"
-            className="mt-4 rounded bg-green px-4 py-2 text-xs text-white"
-            onClick={() => {
-              if (screensaverFailed) {
-                setScreensaverFailed(false);
-                setScreensaverKey((value) => value + 1);
-              } else {
-                liveStatus.retry();
-              }
-            }}
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  };
 
   useEffect(() => {
     if (!ENABLE_TOAST) return;
@@ -284,7 +233,14 @@ export default function Home() {
             isMuted={isMuted}
             src={current.type === "vod" ? current.src : undefined}
           >
-            {current.type === "live" ? renderLiveChannel() : null}
+            {current.type === "live" ? (
+              <LiveChannelContent
+                status={liveStatus.status}
+                playbackId={playbackId}
+                isMuted={isMuted}
+                retryStatus={liveStatus.retry}
+              />
+            ) : null}
           </Television>
         ) : (
           <div className="fixed top-0 left-0 w-screen h-screen -z-10 overflow-hidden bg-[#111]" />

@@ -48,7 +48,7 @@ export function useLiveStreamStatus(enabled = true) {
       lastKnown.current = payload.status;
       setStatus(payload.status);
       setIsStale(false);
-    } catch (error) {
+    } catch {
       if (nextController.signal.aborted) return;
       setIsStale(lastKnown.current !== null);
       if (!lastKnown.current) setStatus("error");

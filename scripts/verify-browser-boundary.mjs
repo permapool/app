@@ -16,6 +16,7 @@ const forbiddenEnvironmentNames = [
   "LIVEBLOCKS_SECRET_KEY",
   "UPSTASH_REDIS_REST_TOKEN",
   "LIVEPEER_API_KEY",
+  "LIVEPEER_STREAM_ID",
   "DATABASE_URL",
 ];
 

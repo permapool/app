@@ -1,0 +1,64 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import Live from "./Live";
+import Pipes from "./Pipes";
+import type { LiveVisualStatus } from "./useLiveStreamStatus";
+
+type LiveChannelContentProps = {
+  status: LiveVisualStatus;
+  playbackId?: string;
+  isMuted: boolean;
+  retryStatus: () => void;
+};
+
+export default function LiveChannelContent({
+  status,
+  playbackId,
+  isMuted,
+  retryStatus,
+}: LiveChannelContentProps) {
+  const [screensaverFailed, setScreensaverFailed] = useState(false);
+  const [screensaverKey, setScreensaverKey] = useState(0);
+  const handleScreensaverError = useCallback(() => setScreensaverFailed(true), []);
+
+  useEffect(() => {
+    if (status !== "offline") setScreensaverFailed(false);
+  }, [status]);
+
+  if (status === "checking") {
+    return <div className="h-full w-full bg-[#111]" aria-label="Checking broadcast status" />;
+  }
+  if (status === "live" && playbackId) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center md:block md:h-auto">
+        <Live playbackId={playbackId} isMuted={isMuted} />
+      </div>
+    );
+  }
+  if (status === "offline" && !screensaverFailed) {
+    return <Pipes key={screensaverKey} onError={handleScreensaverError} />;
+  }
+
+  return (
+    <div className="flex h-full w-full items-center justify-center bg-black text-white">
+      <div className="pointer-events-auto text-center text-sm uppercase">
+        <p className="m-0 text-sm">Television signal unavailable</p>
+        <button
+          type="button"
+          className="mt-4 rounded bg-green px-4 py-2 text-xs text-white"
+          onClick={() => {
+            if (screensaverFailed) {
+              setScreensaverFailed(false);
+              setScreensaverKey((value) => value + 1);
+            } else {
+              retryStatus();
+            }
+          }}
+        >
+          Retry
+        </button>
+      </div>
+    </div>
+  );
+}
