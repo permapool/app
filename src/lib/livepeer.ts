@@ -1,38 +1,82 @@
 import "server-only";
 
-export type LiveStatus = {
-  isActive: boolean;
-  playbackUrl: string | null;
+export type LiveBroadcastStatus = "live" | "offline" | "error";
+
+type LiveStatusResult = {
+  status: LiveBroadcastStatus;
 };
 
-const BASE = "https://livepeer.studio/api";
+type LiveStatusReaderOptions = {
+  fetchImpl?: typeof fetch;
+  getConfig?: () => { apiKey?: string; streamId?: string };
+  now?: () => number;
+  cacheTtlMs?: number;
+};
 
-const headers = () => ({
-  Authorization: `Bearer ${process.env.LIVEPEER_API_KEY}`,
-  "Content-Type": "application/json",
-});
+const LIVEPEER_API_BASE = "https://livepeer.studio/api";
+export const LIVE_STATUS_CACHE_TTL_MS = 5_000;
 
-export async function fetchLiveStatus(): Promise<LiveStatus> {
-  const streamId = process.env.LIVEPEER_STREAM_ID;
-  const playbackId = process.env.LIVEPEER_PLAYBACK_ID;
+export function createLiveStatusReader({
+  fetchImpl = fetch,
+  getConfig = () => ({
+    apiKey: process.env.LIVEPEER_API_KEY,
+    streamId: process.env.LIVEPEER_STREAM_ID,
+  }),
+  now = Date.now,
+  cacheTtlMs = LIVE_STATUS_CACHE_TTL_MS,
+}: LiveStatusReaderOptions = {}) {
+  let cached: { expiresAt: number; result: LiveStatusResult } | null = null;
+  let inFlight: Promise<LiveStatusResult> | null = null;
 
-  if (!streamId || !playbackId) {
-    return { isActive: false, playbackUrl: null };
-  }
+  const readProvider = async (): Promise<LiveStatusResult> => {
+    const { apiKey, streamId } = getConfig();
+    if (!apiKey || !streamId) return { status: "error" };
 
-  const res = await fetch(`${BASE}/stream/${streamId}`, {
-    method: "GET",
-    headers: headers(),
-    cache: "no-store",
-  });
+    try {
+      const response = await fetchImpl(`${LIVEPEER_API_BASE}/stream/${streamId}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        cache: "no-store",
+      });
 
-  if (!res.ok) return { isActive: false, playbackUrl: null };
+      if (!response.ok) return { status: "error" };
 
-  const data = await res.json();
-  const isActive = Boolean(data?.isActive);
-  const playbackUrl = isActive
-    ? `https://livepeercdn.com/hls/${playbackId}/index.m3u8`
-    : null;
+      const payload: unknown = await response.json();
+      if (
+        !payload ||
+        typeof payload !== "object" ||
+        typeof (payload as { isActive?: unknown }).isActive !== "boolean"
+      ) {
+        return { status: "error" };
+      }
 
-  return { isActive, playbackUrl };
+      return {
+        status: (payload as { isActive: boolean }).isActive ? "live" : "offline",
+      };
+    } catch {
+      return { status: "error" };
+    }
+  };
+
+  return async function readLiveStatus(): Promise<LiveStatusResult> {
+    const currentTime = now();
+    if (cached && cached.expiresAt > currentTime) return cached.result;
+    if (inFlight) return inFlight;
+
+    inFlight = readProvider().then((result) => {
+      cached = { expiresAt: now() + cacheTtlMs, result };
+      return result;
+    });
+
+    try {
+      return await inFlight;
+    } finally {
+      inFlight = null;
+    }
+  };
 }
+
+export const fetchLiveStatus = createLiveStatusReader();
