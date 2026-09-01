@@ -8,6 +8,7 @@ import {
   bucketWalletOrigin,
   bucketWalletSelectionStatus,
   createPrivyUsersPageSource,
+  createPrivyUsersListFn,
   executeWalletInventoryAudit,
   parseWalletInventoryAuditArgs,
   renderWalletInventoryAuditReport,
@@ -76,6 +77,23 @@ function render(reportOrResult: { report: unknown }) {
 
 const startedAt = new Date("2026-08-31T12:00:00.000Z");
 const completedAt = new Date("2026-08-31T12:00:05.000Z");
+
+function makeSdkErrorMessage(label: string) {
+  return `${label} user_123 address_0x1111111111111111111111111111111111111111 token_secret secret_app_id`;
+}
+
+function makePrivyErrorLike(
+  className: string,
+  status?: number,
+  extra: Record<string, unknown> = {},
+) {
+  return {
+    constructor: { name: className },
+    name: "Error",
+    status,
+    ...extra,
+  } as unknown;
+}
 
 describe("wallet inventory audit buckets", () => {
   it("maps unknown values into fixed unknown buckets", () => {
@@ -351,6 +369,249 @@ describe("executeWalletInventoryAudit", () => {
     expect(result.report.complete).toBe(false);
     expect(result.report.pagination_completed).toBe(false);
     expect(listUsers).toHaveBeenCalledTimes(2);
+  });
+
+  it("reuses one users client across sequential pages", async () => {
+    const listCalls: Array<unknown> = [];
+    const createUsersClient = vi.fn(() => ({
+      list: vi.fn(async ({ cursor }: { cursor?: string; limit?: number }) => {
+        listCalls.push({ cursor });
+        if (!cursor) {
+          return {
+            data: [{ linked_accounts: [embeddedEvmAccount({ id: "page-one" })] }],
+            next_cursor: "page-two",
+          };
+        }
+
+        return {
+          data: [{ linked_accounts: [embeddedEvmAccount({ id: "page-two" })] }],
+          next_cursor: "",
+        };
+      }),
+    }));
+
+    const result = await executeWalletInventoryAudit(
+      createPrivyUsersPageSource(createPrivyUsersListFn(() => createUsersClient()), {
+        limit: 2,
+      }),
+      startedAt,
+      () => completedAt,
+    );
+
+    expect(result.exit_code).toBe(0);
+    expect(createUsersClient).toHaveBeenCalledTimes(1);
+    expect(listCalls).toEqual([{ cursor: undefined }, { cursor: "page-two" }]);
+    expect(result.report.users_scanned).toBe(2);
+  });
+});
+
+describe("wallet inventory audit SDK error taxonomy", () => {
+  const taxonomyCases = [
+    {
+      label: "AuthenticationError",
+      error: () =>
+        makePrivyErrorLike("AuthenticationError", 401, {
+          error: { message: makeSdkErrorMessage("auth") },
+          message: "auth message",
+        }),
+      error_code: "authentication_failed",
+    },
+    {
+      label: "PermissionDeniedError",
+      error: () =>
+        makePrivyErrorLike("PermissionDeniedError", 403, {
+          error: { message: makeSdkErrorMessage("permission") },
+          message: "permission message",
+        }),
+      error_code: "permission_denied",
+    },
+    {
+      label: "RateLimitError",
+      error: () =>
+        makePrivyErrorLike("RateLimitError", 429, {
+          error: { message: makeSdkErrorMessage("rate") },
+          message: "rate message",
+        }),
+      error_code: "rate_limited",
+    },
+    {
+      label: "APIConnectionError",
+      error: () =>
+        makePrivyErrorLike("APIConnectionError", undefined, {
+          cause: new Error("cause redacted"),
+          message: makeSdkErrorMessage("connection"),
+        }),
+      error_code: "connection_failed",
+    },
+    {
+      label: "APIConnectionTimeoutError",
+      error: () =>
+        makePrivyErrorLike("APIConnectionTimeoutError", undefined, {
+          message: makeSdkErrorMessage("timeout"),
+        }),
+      error_code: "connection_timeout",
+    },
+    {
+      label: "InternalServerError",
+      error: () =>
+        makePrivyErrorLike("InternalServerError", 500, {
+          error: { message: makeSdkErrorMessage("upstream") },
+          message: "upstream message",
+        }),
+      error_code: "upstream_failed",
+    },
+    {
+      label: "BadRequestError",
+      error: () =>
+        makePrivyErrorLike("BadRequestError", 400, {
+          error: { message: makeSdkErrorMessage("bad-request") },
+          message: "bad request message",
+        }),
+      error_code: "invalid_request",
+    },
+    {
+      label: "NotFoundError",
+      error: () =>
+        makePrivyErrorLike("NotFoundError", 404, {
+          error: { message: makeSdkErrorMessage("missing") },
+          message: "not found message",
+        }),
+      error_code: "invalid_request",
+    },
+    {
+      label: "ConflictError",
+      error: () =>
+        makePrivyErrorLike("ConflictError", 409, {
+          error: { message: makeSdkErrorMessage("conflict") },
+          message: "conflict message",
+        }),
+      error_code: "invalid_request",
+    },
+    {
+      label: "UnprocessableEntityError",
+      error: () =>
+        makePrivyErrorLike("UnprocessableEntityError", 422, {
+          error: { message: makeSdkErrorMessage("unprocessable") },
+          message: "unprocessable message",
+        }),
+      error_code: "invalid_request",
+    },
+  ] as const;
+
+  it.each(taxonomyCases)(
+    "maps $label to a sanitized error code",
+    async ({ error, error_code }) => {
+      const listUsers: PrivyUsersListFn = vi.fn(async () => {
+        throw error();
+      });
+      const result = await executeWalletInventoryAudit(
+        createPrivyUsersPageSource(listUsers, { limit: 1 }),
+        startedAt,
+        () => completedAt,
+      );
+
+      const serialized = renderWalletInventoryAuditReport(result.report);
+      expect(result.exit_code).toBe(1);
+      expect(result.report.error_code).toBe(error_code);
+      expect(serialized).not.toContain("user_123");
+      expect(serialized).not.toContain("address_0x1111111111111111111111111111111111111111");
+      expect(serialized).not.toContain("token_secret");
+      expect(serialized).not.toContain("secret_app_id");
+      expect(serialized).not.toContain("raw");
+      expect(() => JSON.parse(serialized)).not.toThrow();
+    },
+  );
+
+  it("maps a generic PrivyAPIError to unknown_sdk_failure", async () => {
+    const listUsers: PrivyUsersListFn = vi.fn(async () => {
+      throw makePrivyErrorLike("PrivyAPIError", undefined, {
+        message: "sdk base message user_123",
+      });
+    });
+    const result = await executeWalletInventoryAudit(
+      createPrivyUsersPageSource(listUsers, { limit: 1 }),
+      startedAt,
+      () => completedAt,
+    );
+
+    const serialized = renderWalletInventoryAuditReport(result.report);
+    expect(result.exit_code).toBe(1);
+    expect(result.report.error_code).toBe("unknown_sdk_failure");
+    expect(serialized).not.toContain("sdk base message");
+    expect(serialized).not.toContain("user_123");
+  });
+
+  it("uses invalid_request for representative 4xx SDK statuses", async () => {
+    const listUsers: PrivyUsersListFn = vi.fn(async () => {
+      throw makePrivyErrorLike("BadRequestError", 400, {
+        error: { message: makeSdkErrorMessage("representative-4xx") },
+        message: "representative 4xx",
+      });
+    });
+    const result = await executeWalletInventoryAudit(
+      createPrivyUsersPageSource(listUsers, { limit: 1 }),
+      startedAt,
+      () => completedAt,
+    );
+
+    expect(result.exit_code).toBe(1);
+    expect(result.report.error_code).toBe("invalid_request");
+  });
+
+  it("does not trust a plain object with status metadata as an SDK error", async () => {
+    const listUsers: PrivyUsersListFn = vi.fn(async () => {
+      throw {
+        constructor: { name: "Object" },
+        name: "Error",
+        status: 401,
+        message: makeSdkErrorMessage("plain-object"),
+      };
+    });
+
+    const result = await executeWalletInventoryAudit(
+      createPrivyUsersPageSource(listUsers, { limit: 1 }),
+      startedAt,
+      () => completedAt,
+    );
+
+    expect(result.exit_code).toBe(1);
+    expect(result.report.error_code).toBe("pagination_failed");
+    expect(renderWalletInventoryAuditReport(result.report)).not.toContain(
+      "plain-object",
+    );
+  });
+
+  it("preserves partial counts when a later page fails with a sanitized SDK error", async () => {
+    const listUsers: PrivyUsersListFn = vi.fn(async ({ cursor }) => {
+      if (!cursor) {
+        return {
+          data: [{ linked_accounts: [embeddedEvmAccount({ id: "partial-a" })] }],
+          next_cursor: "next-page",
+        };
+      }
+
+      throw makePrivyErrorLike("PermissionDeniedError", 403, {
+        error: { message: makeSdkErrorMessage("later-page") },
+        message: "later page message",
+      });
+    });
+
+    const result = await executeWalletInventoryAudit(
+      createPrivyUsersPageSource(listUsers, { limit: 2 }),
+      startedAt,
+      () => completedAt,
+    );
+
+    const serialized = renderWalletInventoryAuditReport(result.report);
+    expect(result.exit_code).toBe(1);
+    expect(result.report.complete).toBe(false);
+    expect(result.report.pagination_completed).toBe(false);
+    expect(result.report.error_code).toBe("permission_denied");
+    expect(result.report.users_scanned).toBe(1);
+    expect(result.report.pages_scanned).toBe(1);
+    expect(result.report.linked_accounts_scanned).toBe(1);
+    expect(serialized).not.toContain("later-page");
+    expect(serialized).not.toContain("address_0x1111111111111111111111111111111111111111");
   });
 });
 

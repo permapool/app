@@ -20,7 +20,15 @@ export type WalletInventoryAuditErrorCode =
   | "invalid_cli_arguments"
   | "invalid_page_shape"
   | "pagination_loop_detected"
-  | "pagination_failed";
+  | "pagination_failed"
+  | "authentication_failed"
+  | "permission_denied"
+  | "rate_limited"
+  | "connection_failed"
+  | "connection_timeout"
+  | "invalid_request"
+  | "upstream_failed"
+  | "unknown_sdk_failure";
 
 type BucketKey<T extends string> = T | "unknown";
 
@@ -53,6 +61,10 @@ export interface PrivyUsersListPage {
 export type PrivyUsersListFn = (
   query: PrivyUsersListQuery,
 ) => Promise<PrivyUsersListPage>;
+
+export interface PrivyUsersClientLike {
+  list(query: PrivyUsersListQuery): Promise<PrivyUsersListPage>;
+}
 
 export interface WalletInventoryAuditCounts {
   wallet_kind: Record<WalletKindBucket, number>;
@@ -178,6 +190,92 @@ function bucketFromSet<T extends string>(
   return (allowed as readonly string[]).includes(value) ? (value as T) : "unknown";
 }
 
+function getPrivySdkErrorClassName(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return null;
+  }
+
+  const constructorName = (error as { constructor?: { name?: string } }).constructor?.name;
+  return typeof constructorName === "string" ? constructorName : null;
+}
+
+function getPrivySdkErrorStatus(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return null;
+  }
+
+  const status = (error as { status?: unknown }).status;
+  return typeof status === "number" ? status : null;
+}
+
+function classifyPrivySdkError(error: unknown): WalletInventoryAuditErrorCode | null {
+  const className = getPrivySdkErrorClassName(error);
+  const status = getPrivySdkErrorStatus(error);
+
+  if (className === "APIConnectionTimeoutError") {
+    return "connection_timeout";
+  }
+
+  if (className === "APIConnectionError") {
+    return "connection_failed";
+  }
+
+  if (className === "AuthenticationError") {
+    return "authentication_failed";
+  }
+
+  if (className === "PermissionDeniedError") {
+    return "permission_denied";
+  }
+
+  if (className === "RateLimitError") {
+    return "rate_limited";
+  }
+
+  if (
+    className === "BadRequestError" ||
+    className === "NotFoundError" ||
+    className === "ConflictError" ||
+    className === "UnprocessableEntityError"
+  ) {
+    return "invalid_request";
+  }
+
+  if (className === "InternalServerError") {
+    return "upstream_failed";
+  }
+
+  if (className === "APIError") {
+    if (status === 401) {
+      return "authentication_failed";
+    }
+
+    if (status === 403) {
+      return "permission_denied";
+    }
+
+    if (status === 429) {
+      return "rate_limited";
+    }
+
+    if (status != null && status >= 400 && status < 500) {
+      return "invalid_request";
+    }
+
+    if (status != null && status >= 500) {
+      return "upstream_failed";
+    }
+
+    return "unknown_sdk_failure";
+  }
+
+  if (className === "PrivyAPIError") {
+    return "unknown_sdk_failure";
+  }
+
+  return null;
+}
+
 export function bucketWalletKind(value: string): WalletKindBucket {
   return bucketFromSet(value, WALLET_KIND_BUCKETS);
 }
@@ -210,6 +308,22 @@ export function bucketWalletInventoryReasonCode(
   value: string,
 ): WalletInventoryReasonCodeBucket {
   return bucketFromSet(value, WALLET_REASON_BUCKETS);
+}
+
+export function createPrivyUsersListFn(
+  createUsersClient: () => PrivyUsersClientLike,
+): PrivyUsersListFn {
+  let usersClient: PrivyUsersClientLike | null = null;
+
+  return async (query) => {
+    usersClient ??= createUsersClient();
+    const page = await usersClient.list(query);
+
+    return {
+      data: page.data,
+      next_cursor: page.next_cursor,
+    };
+  };
 }
 
 export function createEmptyWalletInventoryAuditReport(
@@ -365,7 +479,7 @@ export async function executeWalletInventoryAudit(
     report.error_code =
       _error instanceof WalletInventoryAuditError
         ? _error.code
-        : "pagination_failed";
+        : classifyPrivySdkError(_error) ?? "pagination_failed";
 
     return { report, exit_code: 1 };
   }
@@ -389,10 +503,17 @@ export async function* createPrivyUsersPageSource(
       seenCursors.add(cursor);
     }
 
-    const page = await listUsers({
-      cursor,
-      limit: pageLimit,
-    });
+    let page: PrivyUsersListPage;
+    try {
+      page = await listUsers({
+        cursor,
+        limit: pageLimit,
+      });
+    } catch (_error) {
+      throw new WalletInventoryAuditError(
+        classifyPrivySdkError(_error) ?? "pagination_failed",
+      );
+    }
 
     if (
       !page ||
