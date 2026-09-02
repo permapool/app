@@ -208,7 +208,7 @@ function getPrivySdkErrorStatus(error: unknown) {
   return typeof status === "number" ? status : null;
 }
 
-function classifyPrivySdkError(error: unknown): WalletInventoryAuditErrorCode | null {
+export function classifyPrivySdkError(error: unknown): WalletInventoryAuditErrorCode | null {
   const className = getPrivySdkErrorClassName(error);
   const status = getPrivySdkErrorStatus(error);
 
