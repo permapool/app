@@ -21,7 +21,6 @@ import type { PrivyLinkedWalletAccountInput } from "./wallet-inventory";
 
 const EVM_ADDRESS_A = "0x1111111111111111111111111111111111111111";
 const EVM_ADDRESS_B = "0x2222222222222222222222222222222222222222";
-const SOLANA_ADDRESS = "So11111111111111111111111111111111111111112";
 
 function embeddedEvmAccount(
   overrides: Partial<PrivyLinkedWalletAccountInput> = {},
@@ -69,10 +68,6 @@ async function* pages(
   for (const value of values) {
     yield value;
   }
-}
-
-function render(reportOrResult: { report: unknown }) {
-  return JSON.stringify(reportOrResult, null, 2);
 }
 
 const startedAt = new Date("2026-08-31T12:00:00.000Z");

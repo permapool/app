@@ -1,5 +1,4 @@
 import { getAddress, isAddress } from "viem";
-import { isAddress as isSolanaAddress } from "@solana/kit";
 import {
   classifyPrivyLinkedWalletInventory,
   type PrivyLinkedWalletAccountInput,
@@ -429,15 +428,6 @@ function normalizeEvmAddress(address: string) {
   return getAddress(address);
 }
 
-function normalizeSolanaAddress(address: string) {
-  const trimmed = address.trim();
-  if (!trimmed || !isSolanaAddress(trimmed)) {
-    return null;
-  }
-
-  return trimmed;
-}
-
 function normalizeWalletResourceChainNamespace(
   chainType: string | null | undefined,
 ): WalletChainNamespaceBucket {
@@ -471,7 +461,7 @@ function normalizeDatabaseChainNamespace(chainId: number) {
 function routeLinkedAccounts(accounts: ReadonlyArray<ReconciliationPrivyLinkedAccountInput>) {
   const walletAccounts: PrivyLinkedWalletAccountInput[] = [];
   let nonWalletIdentityAccounts = 0;
-  let malformedWalletShapedRecords = 0;
+  const malformedWalletShapedRecords = 0;
 
   for (const account of accounts) {
     if (account.type === "wallet" || account.type === "smart_wallet") {
