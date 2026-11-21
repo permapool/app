@@ -8,18 +8,85 @@ datasource db {
 }
 
 model User {
-  id           String        @id @default(uuid()) @db.Uuid
-  privyId      String        @unique
-  email        String?
-  username     String        @unique
-  displayName  String?
-  hasCustomHandle Boolean    @default(false)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  wallets      Wallet[]
-  userRoles    UserRole[]
-  chatMessages ChatMessage[]
-  reactions    Reaction[]
+  id                         String            @id @default(uuid()) @db.Uuid
+  privyId                    String            @unique
+  email                      String?
+  username                   String            @unique
+  displayName                String?
+  hasCustomHandle            Boolean           @default(false)
+  createdAt                  DateTime          @default(now())
+  updatedAt                  DateTime          @updatedAt
+  wallets                    Wallet[]
+  userRoles                  UserRole[]
+  chatMessages               ChatMessage[]
+  reactions                  Reaction[]
+  showProducerAssignments    ShowProducer[]
+  episodeProducerAssignments EpisodeProducer[]
+}
+
+model Show {
+  id          String         @id @default(uuid()) @db.Uuid
+  slug        String         @unique
+  title       String
+  description String?
+  archivedAt  DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  episodes    Episode[]
+  producers   ShowProducer[]
+}
+
+model Episode {
+  id                 String            @id @default(uuid()) @db.Uuid
+  slug               String            @unique
+  title              String
+  shortDescription   String?
+  scheduledStartAt   DateTime
+  timezone           String
+  state              EpisodeState      @default(SCHEDULED)
+  publicJoinUrl      String?
+  showId             String?           @db.Uuid
+  youtubeBroadcastId String?           @unique
+  startedAt          DateTime?
+  endedAt            DateTime?
+  cancelledAt        DateTime?
+  version            Int               @default(0)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  show               Show?             @relation(fields: [showId], references: [id], onDelete: SetNull)
+  producers          EpisodeProducer[]
+
+  @@index([showId, scheduledStartAt])
+  @@index([state, scheduledStartAt])
+}
+
+enum EpisodeState {
+  SCHEDULED
+  LIVE
+  COMPLETED
+  CANCELLED
+}
+
+model ShowProducer {
+  showId    String   @db.Uuid
+  userId    String   @db.Uuid
+  createdAt DateTime @default(now())
+  show      Show     @relation(fields: [showId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([showId, userId])
+  @@index([userId])
+}
+
+model EpisodeProducer {
+  episodeId String   @db.Uuid
+  userId    String   @db.Uuid
+  createdAt DateTime @default(now())
+  episode   Episode  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([episodeId, userId])
+  @@index([userId])
 }
 
 model Wallet {
@@ -52,11 +119,11 @@ model UserRole {
 }
 
 model ChatSession {
-  id              String       @id @default(uuid()) @db.Uuid
-  createdAt       DateTime     @default(now())
-  isThread        Boolean      @default(false)
-  parentMessageId String?      @unique @db.Uuid
-  parentMessage   ChatMessage? @relation("ThreadRoot", fields: [parentMessageId], references: [id])
+  id              String        @id @default(uuid()) @db.Uuid
+  createdAt       DateTime      @default(now())
+  isThread        Boolean       @default(false)
+  parentMessageId String?       @unique @db.Uuid
+  parentMessage   ChatMessage?  @relation("ThreadRoot", fields: [parentMessageId], references: [id])
   messages        ChatMessage[]
 
   @@index([parentMessageId])
