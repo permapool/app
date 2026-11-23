@@ -86,7 +86,7 @@ describe("Community Session authorization", () => {
   });
 
   it("returns a stable error for invalid Privy authentication", async () => {
-    mock.currentUser.mockRejectedValue(new CurrentUserAuthenticationError("provider detail"));
+    mock.currentUser.mockRejectedValue(new CurrentUserAuthenticationError());
 
     await denied(requireAuthenticatedUser(request()), "AUTH_REQUIRED", 401);
     expect(mock.currentUser).toHaveBeenCalledWith(expect.any(Request));
