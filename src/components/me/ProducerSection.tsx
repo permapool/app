@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { usePrivy } from "@privy-io/react-auth";
+import Link from "next/link";
 
 type SessionForm = {
   requestId: string;
@@ -201,8 +202,7 @@ export default function ProducerSection({ userId }: { userId: string }) {
         {draft?.created ? (
           <div role="status" className="space-y-2 border p-4">
             <p>Session scheduled.</p>
-            <p>Canonical path: <code>{draft.created.path}</code></p>
-            <p className="text-xs opacity-70">The session page is coming next.</p>
+            <p>Canonical path: <Link href={draft.created.path} className="underline"><code>{draft.created.path}</code></Link></p>
             <button type="button" className="border px-3 py-1" onClick={() => setDraft(newDraft())}>
               Host another session
             </button>
@@ -256,10 +256,10 @@ export default function ProducerSection({ userId }: { userId: string }) {
           <ul className="space-y-2">
             {episodes.map((episode) => (
               <li key={episode.id} className="border p-3 space-y-1">
-                <div className="font-medium">{episode.title}</div>
+                <div className="font-medium"><Link href={episode.path} className="underline">{episode.title}</Link></div>
                 <div>{localStart(episode)} · {episode.timezone}</div>
                 <div className="text-xs">{episode.state}{episode.show ? ` · ${episode.show.title}` : ""}</div>
-                <code className="text-xs break-all">{episode.path}</code>
+                <Link href={episode.path} className="text-xs underline break-all"><code>{episode.path}</code></Link>
               </li>
             ))}
           </ul>

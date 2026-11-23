@@ -57,7 +57,8 @@ describe("ProducerSection", () => {
     fireEvent.click(screen.getByRole("button", { name: "Schedule session" }));
 
     expect(await screen.findByText("Session scheduled.")).toBeTruthy();
-    expect(screen.getByText("/episodes/friday-gathering-id")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "/episodes/friday-gathering-id" }).getAttribute("href"))
+      .toBe("/episodes/friday-gathering-id");
     const post = fetchMock.mock.calls.find(([path]) => path === "/api/episodes");
     expect(JSON.parse(post?.[1]?.body as string)).toMatchObject({
       requestId: REQUEST_ID,
@@ -90,8 +91,11 @@ describe("ProducerSection", () => {
     render(<ProducerSection userId="host-id" />);
 
     expect(await screen.findByText("Community Hour Meetup")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Community Hour Meetup" }).getAttribute("href"))
+      .toBe("/episodes/community-hour-id");
     expect(screen.getByText(/America\/New_York/)).toBeTruthy();
-    expect(screen.getByText("/episodes/community-hour-id")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "/episodes/community-hour-id" }).getAttribute("href"))
+      .toBe("/episodes/community-hour-id");
     await waitFor(() => {
       expect(screen.getByRole("option", { name: "Community Hour" })).toBeTruthy();
     });
