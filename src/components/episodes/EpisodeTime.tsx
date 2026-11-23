@@ -6,10 +6,12 @@ export default function EpisodeTime({
   instant,
   timezone,
   sourceLabel,
+  compact = false,
 }: {
   instant: string;
   timezone: string;
   sourceLabel: string;
+  compact?: boolean;
 }) {
   const [viewerLabel, setViewerLabel] = useState<string | null>(null);
 
@@ -31,6 +33,14 @@ export default function EpisodeTime({
       setViewerLabel(null);
     }
   }, [instant]);
+
+  if (compact) return (
+    <div className="space-y-1">
+      <p className="font-medium"><time dateTime={instant}>{viewerLabel || sourceLabel}</time></p>
+      {viewerLabel ? <p className="text-sm">Host time: {sourceLabel}</p> : null}
+      <p className="text-xs">Source timezone: {timezone || "Unavailable"}</p>
+    </div>
+  );
 
   return (
     <div className="space-y-1">

@@ -86,7 +86,7 @@ export default function EpisodePageContent({
           </div>
         </section>
 
-        <Link href="/" className="inline-block border-b border-black text-sm">Back to HIGHER.ZIP</Link>
+        <Link href="/schedule" className="inline-block border-b border-black text-sm">Back to schedule</Link>
       </article>
     </main>
   );

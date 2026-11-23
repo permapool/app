@@ -101,3 +101,34 @@ export async function getPublicEpisodeBySlug(slug: string): Promise<PublicEpisod
 
   return episode ? projectPublicEpisode(episode) : null;
 }
+
+// Keep discovery bounded: every LIVE Episode, the next 50 future records,
+// and the 50 most recent past records. The same projection serves detail and list.
+export async function listPublicEpisodes(now = new Date()): Promise<PublicEpisode[]> {
+  const [live, upcoming, past] = await Promise.all([
+    prisma.episode.findMany({
+      where: { state: "LIVE" },
+      orderBy: [{ scheduledStartAt: "asc" }, { id: "asc" }],
+      select: publicEpisodeSelect,
+    }),
+    prisma.episode.findMany({
+      where: { state: { in: ["SCHEDULED", "CANCELLED"] }, scheduledStartAt: { gte: now } },
+      orderBy: [{ scheduledStartAt: "asc" }, { id: "asc" }],
+      take: 50,
+      select: publicEpisodeSelect,
+    }),
+    prisma.episode.findMany({
+      where: {
+        OR: [
+          { state: "COMPLETED" },
+          { state: { in: ["SCHEDULED", "CANCELLED"] }, scheduledStartAt: { lt: now } },
+        ],
+      },
+      orderBy: [{ scheduledStartAt: "desc" }, { id: "asc" }],
+      take: 50,
+      select: publicEpisodeSelect,
+    }),
+  ]);
+
+  return [...live, ...upcoming, ...past].map(projectPublicEpisode);
+}

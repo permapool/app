@@ -114,6 +114,12 @@ export default function Navigation() {
               </div>
 
               <Link
+                href="/schedule"
+                className="w-full max-w-xs mx-auto block text-center bg-black text-white py-2 px-3 transition-colors hover:bg-[green] hover:text-white m-2 text-xs uppercase"
+              >
+                Schedule
+              </Link>
+              <Link
                 href="/missions"
                 className="w-full max-w-xs mx-auto block text-center bg-black text-white py-2 px-3 transition-colors hover:bg-[green] hover:text-white m-2 text-xs uppercase"
               >
@@ -133,6 +139,12 @@ export default function Navigation() {
                 className="w-full max-w-xs mx-auto block text-center bg-[orange] text-black py-2 px-3 transition-colors hover:bg-[green] hover:text-white m-2 text-xs uppercase"
               >
                 ←
+              </Link>
+              <Link
+                href="/schedule"
+                className="w-full max-w-xs mx-auto block text-center bg-black text-white py-2 px-3 transition-colors hover:bg-[green] hover:text-white m-2 text-xs uppercase"
+              >
+                Schedule
               </Link>
               <Link
                 href="/missions"
@@ -196,6 +208,14 @@ export default function Navigation() {
       {mobileOpen && (
         <div id="mobile-nav-menu" role="menu" className="md:hidden px-2 pb-2">
           <div className="mt-2 grid grid-cols-1 gap-2">
+            <Link
+              href="/schedule"
+              role="menuitem"
+              className="w-full text-center bg-black text-white py-2 px-3 text-xs uppercase hover:bg-[green] hover:text-white"
+              onClick={() => setMobileOpen(false)}
+            >
+              Schedule
+            </Link>
             <Link
               href="/shop"
               role="menuitem"

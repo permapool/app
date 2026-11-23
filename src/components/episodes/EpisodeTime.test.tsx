@@ -38,4 +38,24 @@ describe("EpisodeTime", () => {
     expect(sourceTimeLabel("2030-07-10T23:30:00.000Z", "Invalid/Zone")).toContain("UTC");
     expect(sourceTimeLabel("bad instant", "UTC")).toBe("Schedule time unavailable");
   });
+
+  it("renders compact source time first, then viewer-local time without a hydration mismatch", async () => {
+    const instant = "2030-07-10T23:30:00.000Z";
+    const timezone = "Invalid/Zone";
+    const sourceLabel = sourceTimeLabel(instant, timezone);
+    const element = <EpisodeTime instant={instant} timezone={timezone} sourceLabel={sourceLabel} compact />;
+    const serverHtml = renderToString(element);
+    const container = document.createElement("div");
+    container.innerHTML = serverHtml;
+    const errors = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    expect(serverHtml).toContain(sourceLabel);
+    expect(serverHtml).toContain("Invalid/Zone");
+    let root: ReturnType<typeof hydrateRoot>;
+    await act(async () => { root = hydrateRoot(container, element); });
+    expect(container.textContent).toContain("Host time:");
+    expect(container.textContent).toContain("Source timezone: Invalid/Zone");
+    expect(errors.mock.calls.flat().join(" ")).not.toMatch(/hydration|did not match/i);
+    await act(async () => root.unmount());
+  });
 });

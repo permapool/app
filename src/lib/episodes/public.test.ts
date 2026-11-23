@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mock = vi.hoisted(() => ({ findUnique: vi.fn() }));
+const mock = vi.hoisted(() => ({ findUnique: vi.fn(), findMany: vi.fn() }));
 
 vi.mock("server-only", () => ({}));
-vi.mock("~/lib/prisma", () => ({ prisma: { episode: { findUnique: mock.findUnique } } }));
+vi.mock("~/lib/prisma", () => ({ prisma: { episode: { findUnique: mock.findUnique, findMany: mock.findMany } } }));
 
-import { getPublicEpisodeBySlug } from "./public";
+import { getPublicEpisodeBySlug, listPublicEpisodes } from "./public";
 
 function person(id: string, username: string, displayName: string | null) {
   return {
@@ -37,7 +37,10 @@ function episode(overrides: Record<string, unknown> = {}) {
 }
 
 describe("getPublicEpisodeBySlug", () => {
-  beforeEach(() => mock.findUnique.mockReset());
+  beforeEach(() => {
+    mock.findUnique.mockReset();
+    mock.findMany.mockReset();
+  });
 
   it("returns a standalone scheduled Episode without requiring a video or Show", async () => {
     mock.findUnique.mockResolvedValue(episode());
@@ -110,5 +113,42 @@ describe("getPublicEpisodeBySlug", () => {
     const result = await getPublicEpisodeBySlug("community-gathering-uuid");
 
     expect(result?.publicJoinUrl).toBeNull();
+  });
+
+  it("uses the exact detail projection for bounded live, future, and past reads", async () => {
+    const now = new Date("2030-01-01T00:00:00.000Z");
+    mock.findUnique.mockResolvedValue(episode());
+    mock.findMany.mockResolvedValueOnce([episode()]).mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+
+    const detail = await getPublicEpisodeBySlug("community-gathering-uuid");
+    const list = await listPublicEpisodes(now);
+
+    expect(list).toEqual([detail]);
+    expect(mock.findMany).toHaveBeenCalledTimes(3);
+    const calls = mock.findMany.mock.calls.map(([args]) => args);
+    for (const call of calls) expect(call.select).toBe(mock.findUnique.mock.calls[0][0].select);
+    expect(calls[0]).toMatchObject({ where: { state: "LIVE" }, orderBy: [{ scheduledStartAt: "asc" }, { id: "asc" }] });
+    expect(calls[1]).toMatchObject({ take: 50, where: { scheduledStartAt: { gte: now } } });
+    expect(calls[2]).toMatchObject({ take: 50, orderBy: [{ scheduledStartAt: "desc" }, { id: "asc" }] });
+    expect(JSON.stringify(list)).not.toMatch(/email|privyId|wallets|userRoles|roleId|userId|private-privy-id|0xprivate/);
+  });
+
+  it("keeps direct and Show hosts deduplicated in list results", async () => {
+    mock.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([episode({
+      producers: [{ user: person("same", "direct", "Direct Host") }],
+      show: {
+        id: "show-id", slug: "show", title: "Show", producers: [
+          { user: person("same", "direct", "Direct Host") },
+          { user: person("other", "show-host", null) },
+        ],
+      },
+    })]).mockResolvedValueOnce([]);
+
+    const list = await listPublicEpisodes(new Date("2030-01-01T00:00:00.000Z"));
+
+    expect(list[0].hosts).toEqual([
+      { username: "direct", displayName: "Direct Host" },
+      { username: "show-host", displayName: null },
+    ]);
   });
 });
