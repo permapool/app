@@ -194,6 +194,15 @@ describe("Community Session authorization", () => {
     },
   );
 
+  it("revoking the global producer role denies existing direct and Show assignments", async () => {
+    mock.currentUser.mockResolvedValue(user("audience"));
+    mock.show.mockResolvedValue(show(true));
+    mock.episode.mockResolvedValue(episode({ direct: true, linked: true, viaShow: true }));
+
+    await denied(requireShowAccess(request(), "11111111-1111-4111-8111-111111111111"), "FORBIDDEN", 403);
+    await denied(requireEpisodeAccess(request(), "22222222-2222-4222-8222-222222222222"), "FORBIDDEN", 403);
+  });
+
   it("missing resources return NOT_FOUND without provider details", async () => {
     mock.currentUser.mockResolvedValue(user("producer"));
     mock.show.mockResolvedValue(null);

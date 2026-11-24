@@ -4,6 +4,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { useAuth } from "~/components/providers/AuthProvider";
 import ProducerSection from "~/components/me/ProducerSection";
+import AdminSection from "~/components/me/AdminSection";
 import { hasRole } from "~/lib/auth/roles";
 
 function shortenAddress(address: string) {
@@ -149,6 +150,7 @@ function MePageContent() {
       {(hasRole(user, "producer") || hasRole(user, "admin")) ? (
         <ProducerSection key={user.userId} userId={user.userId} />
       ) : null}
+      {hasRole(user, "admin") ? <AdminSection key={`admin-${user.userId}`} currentUserId={user.userId} /> : null}
     </main>
   );
 }

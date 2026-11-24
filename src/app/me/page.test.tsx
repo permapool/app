@@ -15,6 +15,9 @@ vi.mock("@privy-io/react-auth", () => ({
 vi.mock("~/components/me/ProducerSection", () => ({
   default: () => <section aria-label="Producer"><h2>Producer</h2><h3>Host a Session</h3></section>,
 }));
+vi.mock("~/components/me/AdminSection", () => ({
+  default: () => <section aria-label="Admin"><h2>Admin</h2><h3>Producer access</h3></section>,
+}));
 
 import MePage from "./page";
 
@@ -43,6 +46,19 @@ describe("/me producer visibility", () => {
 
     expect(screen.getByRole("heading", { name: "Producer" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Host a Session" })).toBeTruthy();
+  });
+
+  it("shows Admin controls only to admins", () => {
+    auth.user = user("admin");
+    render(<MePage />);
+    expect(screen.getByRole("heading", { name: "Admin" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Producer access" })).toBeTruthy();
+  });
+
+  it.each([[], ["audience"], ["producer"]])("hides Admin controls from non-admin roles", (...roles) => {
+    auth.user = user(...roles);
+    render(<MePage />);
+    expect(screen.queryByRole("heading", { name: "Admin" })).toBeNull();
   });
 
   it.each([[], ["audience"], ["future-role"]])("hides Producer controls from non-privileged roles", (...roles) => {
