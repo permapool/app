@@ -74,7 +74,7 @@ export async function bootstrapAdmin(
 
   return db.$transaction(async (tx) => {
     // Serialize concurrent first-admin attempts across processes.
-    await tx.$queryRaw`SELECT pg_advisory_xact_lock(694762806)`;
+    await tx.$queryRaw`SELECT pg_advisory_xact_lock(694762806)::text`;
     const current = await tx.userRole.findFirst({ where: { roleId: role.id }, select: { userId: true } });
     if (current && current.userId !== user.id) throw new BootstrapAdminError("ADMIN_EXISTS");
     if (current) return { ...base, result: "already_admin" };
