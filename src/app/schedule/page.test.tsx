@@ -10,7 +10,7 @@ vi.mock("~/components/episodes/ScheduleContent", () => ({
   ),
 }));
 
-import SchedulePage, { generateMetadata } from "./page";
+import SchedulePage, { dynamic, generateMetadata } from "./page";
 
 describe("/schedule", () => {
   beforeEach(() => {
@@ -31,5 +31,9 @@ describe("/schedule", () => {
     const metadata = generateMetadata();
     expect(metadata.title).toBe("HIGHER.ZIP Schedule");
     expect(metadata.alternates?.canonical).toBe("https://higher.zip/schedule");
+  });
+
+  it("renders against current Episode data on each request", () => {
+    expect(dynamic).toBe("force-dynamic");
   });
 });

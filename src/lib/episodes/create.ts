@@ -1,7 +1,6 @@
 import "server-only";
 
 import { prisma } from "~/lib/prisma";
-import { hasRole } from "~/lib/auth/roles";
 import {
   AuthorizationError,
   requireEpisodeAccess,
@@ -146,7 +145,7 @@ export async function createHostedEpisode(request: Request, raw: unknown) {
         publicJoinUrl: input.publicJoinUrl,
         showId: input.showId,
         youtubeBroadcastId: null,
-        ...(input.showId === null && !hasRole(user, "admin")
+        ...(input.showId === null
           ? { producers: { create: { userId: user.userId } } }
           : {}),
       },

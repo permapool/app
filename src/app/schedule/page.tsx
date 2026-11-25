@@ -4,6 +4,8 @@ import { groupPublicEpisodes } from "~/lib/episodes/group";
 import { listPublicEpisodes } from "~/lib/episodes/public";
 import { episodeCanonicalUrl } from "~/lib/episodes/url";
 
+export const dynamic = "force-dynamic";
+
 export function generateMetadata(): Metadata {
   return {
     title: "HIGHER.ZIP Schedule",

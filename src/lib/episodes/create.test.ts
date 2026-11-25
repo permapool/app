@@ -107,12 +107,12 @@ describe("createHostedEpisode", () => {
     });
   });
 
-  it("allows an admin standalone Episode without creating an assignment", async () => {
+  it("atomically assigns an admin as host of their standalone Episode", async () => {
     mock.createAccess.mockResolvedValue(user("admin"));
 
     await createHostedEpisode(request, input());
 
-    expect(mock.create.mock.calls[0][0].data.producers).toBeUndefined();
+    expect(mock.create.mock.calls[0][0].data.producers).toEqual({ create: { userId: "creator-id" } });
   });
 
   it("keeps a Show-linked Episode attached without adding a direct producer assignment", async () => {
